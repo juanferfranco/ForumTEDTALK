@@ -90,19 +90,15 @@ No deben aparecer siempre con la misma intensidad. Una regla central es:
 Por eso en los primeros momentos hay pocas conexiones; luego se intensifican
 cuando la narrativa habla de comunidad, confianza y trabajo conjunto.
 
-### Grid, volumen y arquitectura
+### Trayectorias
 
-El grid no es decoracion permanente. Solo debe aparecer cuando ayuda a expresar:
+Las trayectorias representan caminos, busquedas, aprendizajes y formas de
+construir futuro. No son grid ni cartografia tecnica: son recorridos vivos que
+entran y salen de la espiral, permanecen por momentos y luego se transforman.
 
-- arquitectura del espacio;
-- estructura;
-- rutas;
-- construccion;
-- futuro como sistema que se arma.
-
-Se redujo el uso de grid porque en algunos momentos se sentia como grafica
-tecnica pegada sobre la animacion. La intencion actual es que, cuando aparezca,
-se lea como una abstraccion del volumen Forum o como cartografia de caminos.
+El sistema evita grillas, cuadros, lattice y circulos decorativos. Si una linea
+aparece, debe tener carga semantica: encuentro, relacion, confianza, ruta,
+colaboracion o continuidad.
 
 ### Paleta
 
@@ -158,6 +154,12 @@ comunidad plena; hay busqueda, cruce y disposicion al encuentro.
 Decision: pocas conexiones. El enfasis esta en trayectorias de entrada y salida,
 no en red consolidada.
 
+Ajuste de ritmo: las particulas deben moverse mas lento que en los momentos de
+red. La escena comienza con particulas externas viniendo desde mas lejos;
+despues Forum responde y algunas particulas salen de la espiral. Ambos flujos se
+encuentran en un punto comun y, solo despues de ese encuentro, son atraidos hacia
+el espacio de la espiral. La espiral acompana, pero no domina la lectura.
+
 ### 4. Academia + Industria + Ciudad
 
 Concepto visual: **tres actores**.
@@ -186,8 +188,9 @@ Aqui las conexiones deben intensificarse. Las particulas dejan de ser presencias
 aisladas y empiezan a sostener relaciones. La espiral y la red se sincronizan
 mas, porque Forum ya no solo convoca: transforma.
 
-Decision: aumentar densidad de lineas y estabilidad relacional sin volverlo
-caotico.
+Decision: aumentar densidad de vinculos maduros y relaciones persistentes sin
+introducir circulos decorativos. La comunidad aparece como una red que empieza a
+sostenerse por si misma.
 
 ### 7. El talento crece a la velocidad de la confianza.
 
@@ -197,18 +200,24 @@ La confianza se expresa como continuidad, fluidez y permanencia. Las conexiones
 duran mas, se rompen menos y el movimiento es mas armonico. La velocidad no se
 representa como aceleracion caotica sino como crecimiento sostenido.
 
-Decision: movimiento mas estable, puentes suaves, red menos erratica.
+Decision: hacer visible que el talento crece cuando hay confianza. Las
+particulas se abren y expanden, pero no se dispersan porque conservan sus
+vinculos. Las lineas curvas no son rutas: son relaciones de confianza entre
+particulas concretas. A medida que la confianza crece, el color de esas
+relaciones se intensifica y la red se vuelve mas amplia e hiperconectada sin
+volverse caotica.
 
 ### 8. La experiencia construye el camino...
 
 Concepto visual: **rutas emergentes**.
 
-Aqui si pueden aparecer lineas tipo camino o cartografia. Algunas rutas parecen
-heredadas; otras emergen de manera exploratoria. Descubrir rutas significa
-desviacion inteligente, no desorden.
+Aqui aparecen trayectorias vivas. Algunas rutas parecen heredadas; otras emergen
+de manera exploratoria. Descubrir rutas significa desviacion inteligente, no
+desorden.
 
-Decision: introducir caminos y cierta logica de grid/cartografia, pero solo en
-este momento y los de construccion.
+Decision: eliminar grid y cartografia tecnica. Las particulas deben circular por
+caminos curvos que entran y salen de la espiral, conservando relaciones que ya
+aparecieron en momentos anteriores.
 
 ### 9. Una vision. Dos generaciones.
 
@@ -218,8 +227,17 @@ No se trata de relevo como sustitucion. Se trata de reconocer dos energias que
 conviven. Una dinamica puede ser mas estructural/estable y otra mas exploratoria
 joven.
 
-Decision: dos campos visuales coexisten sin competir. Deben sentirse distintos,
-pero no enfrentados.
+Decision: construir tres comportamientos visuales simultaneos, diferenciados
+pero integrados. La zona joven aparece a la izquierda como nube amplia, fluida y
+rapida: particulas mas saturadas, trayectorias abiertas y relaciones existentes
+pero debiles, punteadas y efimeras. La zona de experiencia aparece a la derecha
+como una malla mas lenta y estructurada, pero no excesivamente cerrada:
+particulas sobrias, suficientemente visibles, relaciones mas ricas e intensas y
+un campo amplio y separado que permite leer la estructura. El centro de la
+espiral es una zona hibrida de mayor escala, cercana al peso visual de la
+hibridacion del momento 6: combina la energia cromatica y dinamica joven con la
+estructura relacional de la experiencia. La colaboracion plena aparece en el
+momento siguiente.
 
 ### 10. El crecimiento no ocurre cuando una generacion reemplaza a otra...
 
@@ -229,8 +247,9 @@ Este momento intensifica el 9. Las dos dinamicas empiezan a conectarse. El
 sistema se vuelve mas rico porque integra, no porque una energia absorba a la
 otra.
 
-Decision: cruzar conexiones entre ambos campos y mezclar movimientos sin perder
-la idea de convivencia.
+Decision: eliminar anillos/circulos extra para que la espiral pueda crecer con
+claridad. El crecimiento ocurre por espiral mas dinamica, color mas intenso y
+vinculos cruzados entre generaciones.
 
 ### 11. Los jovenes no son el futuro...
 
@@ -240,8 +259,9 @@ Este momento responde la pregunta del momento 1. La ventaja que nadie estaba
 aprovechando eran los jovenes. Las particulas jovenes pasan al frente y se hacen
 visibles.
 
-Decision: intensificar cyan/rojo/magenta y hacer que la energia joven aparezca
-con claridad. No debe sentirse como futuro lejano, sino como presente activo.
+Decision: revelar a los jovenes como respuesta narrativa. Las particulas jovenes
+se iluminan, pasan al frente y activan el sistema sin sentirse como futuro
+lejano: son presente activo.
 
 ### 12. El futuro no se hereda. Se construye.
 
@@ -251,19 +271,21 @@ El futuro aparece como una estructura que se arma en tiempo real por la
 convivencia de generaciones, relaciones y rutas. No es herencia pasiva ni
 destino lejano.
 
-Decision: maxima composicion del sistema: espiral, particulas, conexiones,
-rutas y estructura trabajan juntas.
+Decision: eliminar grid, lattice y circulos. El futuro se representa con rutas
+que permanecen parcialmente, otras que aparecen y desaparecen, particulas que
+trabajan sobre caminos y vinculos que sostienen la construccion.
 
 ### 13. QR con memorias / redes
 
-Concepto visual: **continuidad**.
+Concepto visual: **sintesis y continuidad**.
 
-La energia baja de intensidad, pero no desaparece. La red queda respirando
-alrededor del QR. La invitacion es seguir conectado con Forum despues de la
-charla.
+La energia no se apaga. La espiral llega a su maximo esplendor, las particulas
+quedan hiperconectadas y las trayectorias vivas permanecen como memoria de todo
+el recorrido. La invitacion es seguir conectado con Forum despues de la charla.
 
-Decision: texto compacto a la izquierda, QR respirando a la derecha, red viva
-pero calmada. No debe competir con la lectura funcional del QR.
+Decision: eliminar cuadros, circulos y archivo visual sin carga semantica. El
+cierre sintetiza espiral, comunidad, vinculos y rutas; el QR debe ser funcional,
+pero la visualidad de fondo debe sentirse como conclusion del sistema.
 
 ## Decisiones de interfaz y operacion
 

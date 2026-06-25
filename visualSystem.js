@@ -8,6 +8,7 @@ const smoothstep = (edge0, edge1, value) => {
   const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
   return t * t * (3 - 2 * t);
 };
+const quadraticPoint = (a, control, b, t) => lerp(lerp(a, control, t), lerp(control, b, t), t);
 
 function hexToRgb(hex) {
   const clean = hex.replace("#", "");
@@ -85,12 +86,26 @@ export class VisualSystem {
   setMoment(moment) {
     this.current = moment;
     this.momentTime = 0;
+    this.momentHash = makeHash(moment.id);
     this.target = {
       ...moment.behavior,
       intensity: moment.intensity,
     };
     this.colors = moment.colors;
-    this.momentHash = makeHash(moment.id);
+    if (moment.state === "opening") {
+      for (const p of this.particles) {
+        const route = this.getOpeningRoute(p);
+        p.px = route.startX;
+        p.py = route.startY;
+      }
+    }
+    if (moment.state === "duality") {
+      for (const p of this.particles) {
+        const target = this.getDualityTarget(p);
+        p.px = target.x;
+        p.py = target.y;
+      }
+    }
   }
 
   update() {
@@ -116,6 +131,150 @@ export class VisualSystem {
     this.drawSpiral(ctx);
     this.drawParticles(ctx);
     this.drawStateGesture(ctx);
+  }
+
+  getOpeningRoute(p) {
+    const cx = this.width * 0.64;
+    const cy = this.height * 0.46;
+    const base = Math.min(this.width, this.height);
+    const seed = p.seed + this.momentHash * 0.01;
+    const outbound = p.seed % 2 === 0;
+    const farAngle = seededUnit(seed + 5) * TAU;
+    const farDx = Math.cos(farAngle);
+    const farDy = Math.sin(farAngle);
+    const xLimit = farDx > 0 ? this.width * 0.94 : this.width * 0.06;
+    const yLimit = farDy > 0 ? this.height * 0.9 : this.height * 0.08;
+    const scaleX = Math.abs(farDx) < 0.001 ? Infinity : (xLimit - cx) / farDx;
+    const scaleY = Math.abs(farDy) < 0.001 ? Infinity : (yLimit - cy) / farDy;
+    const farScale = Math.min(scaleX, scaleY) * (0.86 + seededUnit(seed + 31) * 0.1);
+    const tangent = seededUnit(seed + 37) - 0.5;
+    const farX = clamp(cx + farDx * farScale + -farDy * tangent * base * 0.08, this.width * 0.04, this.width * 0.96);
+    const farY = clamp(cy + farDy * farScale + farDx * tangent * base * 0.06, this.height * 0.06, this.height * 0.92);
+    const coreAngle =
+      seededUnit(seed + 12) * TAU +
+      this.momentTime * (0.012 + seededUnit(seed + 22) * 0.01) * (outbound ? 1 : -1);
+    const coreX = cx + Math.cos(coreAngle) * base * (0.045 + seededUnit(seed + 17) * 0.035);
+    const coreY = cy + Math.sin(coreAngle) * base * (0.025 + seededUnit(seed + 19) * 0.025);
+    const encounterX = cx - base * 0.14 + (seededUnit(seed + 41) - 0.5) * base * 0.006;
+    const encounterY = cy + (p.lane - 1) * base * 0.004 + (seededUnit(seed + 43) - 0.5) * base * 0.004;
+    const finalX = cx + Math.cos(coreAngle + p.lane * 0.42) * base * (0.07 + seededUnit(seed + 47) * 0.04);
+    const finalY = cy + Math.sin(coreAngle + p.lane * 0.42) * base * (0.035 + seededUnit(seed + 53) * 0.025);
+    const inboundControlX = lerp(farX, encounterX, 0.58) + Math.cos(farAngle + Math.PI / 2) * base * 0.08;
+    const inboundControlY = lerp(farY, encounterY, 0.58) + Math.sin(farAngle + Math.PI / 2) * base * 0.05;
+    const outboundControlX = lerp(coreX, encounterX, 0.5) + Math.cos(coreAngle - Math.PI / 2) * base * 0.05;
+    const outboundControlY = lerp(coreY, encounterY, 0.5) + Math.sin(coreAngle - Math.PI / 2) * base * 0.035;
+    const finalControlX = lerp(encounterX, finalX, 0.52) + base * 0.045;
+    const finalControlY = lerp(encounterY, finalY, 0.52) - base * 0.018;
+
+    return {
+      outbound,
+      farX,
+      farY,
+      coreX,
+      coreY,
+      encounterX,
+      encounterY,
+      finalX,
+      finalY,
+      inboundControlX,
+      inboundControlY,
+      outboundControlX,
+      outboundControlY,
+      finalControlX,
+      finalControlY,
+      startX: outbound ? coreX : farX,
+      startY: outbound ? coreY : farY,
+    };
+  }
+
+  getOpeningPosition(route, drift = 0) {
+    const inboundProgress = smoothstep(0.5, 6.6, this.momentTime);
+    const outboundProgress = smoothstep(3.2, 6.6, this.momentTime);
+    const finalPull = smoothstep(8.4, 15.2, this.momentTime);
+    const firstProgress = route.outbound ? outboundProgress : inboundProgress;
+    const startX = route.outbound ? route.coreX : route.farX;
+    const startY = route.outbound ? route.coreY : route.farY;
+    const controlX = route.outbound ? route.outboundControlX : route.inboundControlX;
+    const controlY = route.outbound ? route.outboundControlY : route.inboundControlY;
+    const meetingX = quadraticPoint(startX, controlX, route.encounterX, firstProgress);
+    const meetingY = quadraticPoint(startY, controlY, route.encounterY, firstProgress);
+    const spiralX = quadraticPoint(route.encounterX, route.finalControlX, route.finalX, finalPull);
+    const spiralY = quadraticPoint(route.encounterY, route.finalControlY, route.finalY, finalPull);
+    const breath = Math.sin(this.time * 0.16 + drift) * Math.min(this.width, this.height) * 0.0035 * (1 - finalPull);
+
+    return {
+      x: lerp(meetingX, spiralX, finalPull) + breath,
+      y: lerp(meetingY, spiralY, finalPull) + breath * 0.42,
+      inboundProgress,
+      outboundProgress,
+      finalPull,
+    };
+  }
+
+  getDualityRole(p) {
+    if (p.seed % 7 === 0 || p.seed % 23 === 0) return "hybrid";
+    return p.seed % 2 === 0 ? "young" : "experience";
+  }
+
+  getDualityTarget(p) {
+    const cx = this.width * 0.64;
+    const cy = this.height * 0.46;
+    const base = Math.min(this.width, this.height);
+    const seed = p.seed + this.momentHash * 0.01;
+    const role = this.getDualityRole(p);
+
+    if (role === "young") {
+      const centerX = this.width * 0.41;
+      const centerY = this.height * 0.5;
+      const angle =
+        seededUnit(seed) * TAU +
+        this.time * (0.44 + seededUnit(seed + 4) * 0.2) +
+        Math.sin(this.time * 1.6 + p.drift) * 0.34;
+      const radius = base * (0.17 + seededUnit(seed + 31) * 0.18);
+      const turbulence = base * (0.018 + seededUnit(seed + 11) * 0.02);
+
+      return {
+        role,
+        young: true,
+        experience: false,
+        hybrid: false,
+        x: centerX + Math.cos(angle) * radius + Math.sin(this.time * 1.1 + seed) * turbulence,
+        y: centerY + Math.sin(angle) * radius * (0.42 + seededUnit(seed + 19) * 0.12) + Math.cos(this.time * 1.35 + seed) * turbulence * 0.6,
+      };
+    }
+
+    if (role === "experience") {
+      const centerX = this.width * 0.76;
+      const centerY = this.height * 0.46;
+      const angle = seededUnit(seed) * TAU - this.time * (0.018 + seededUnit(seed + 4) * 0.014);
+      const ring = p.seed % 7;
+      const radius = base * (0.085 + ring * 0.022 + seededUnit(seed + 37) * 0.04);
+      const microShift = Math.sin(this.time * 0.22 + p.drift) * base * 0.012;
+
+      return {
+        role,
+        young: false,
+        experience: true,
+        hybrid: false,
+        x: centerX + Math.cos(angle) * radius + microShift,
+        y: centerY + Math.sin(angle) * radius * 0.6 + microShift * 0.35,
+      };
+    }
+
+    const angle =
+      seededUnit(seed) * TAU +
+      this.time * (0.1 + seededUnit(seed + 4) * 0.05) * (p.seed % 2 === 0 ? 1 : -1) +
+      Math.sin(this.time * 0.55 + p.drift) * 0.08;
+    const radius = base * (0.1 + seededUnit(seed + 31) * 0.15);
+
+    return {
+      role,
+      young: false,
+      experience: false,
+      hybrid: true,
+      x: cx + Math.cos(angle) * radius + Math.sin(this.time * 0.55 + seed) * base * 0.012,
+      y: cy + Math.sin(angle) * radius * 0.62 + Math.cos(this.time * 0.5 + seed) * base * 0.007,
+    };
   }
 
   drawBackground(ctx, hasBackgroundAsset = false) {
@@ -176,13 +335,18 @@ export class VisualSystem {
       return;
     }
 
-    if (state === "community" || state === "trust") {
-      this.drawOrbitalNet(ctx);
+    if (state === "community") {
+      this.drawMatureBonds(ctx, 0.72);
+      return;
+    }
+
+    if (state === "trust") {
+      this.drawMatureBonds(ctx, 0.96);
       return;
     }
 
     if (state === "routes") {
-      this.drawForumVolume(ctx, 0.55);
+      this.drawLivingRoutes(ctx, 0.72, 0.52);
       return;
     }
 
@@ -193,7 +357,7 @@ export class VisualSystem {
 
     if (state === "convergence") {
       this.drawDualGenerationField(ctx, true);
-      this.drawOrbitalNet(ctx, 0.78);
+      this.drawMatureBonds(ctx, 0.92);
       return;
     }
 
@@ -202,13 +366,20 @@ export class VisualSystem {
       return;
     }
 
-    if (state === "qr") {
-      this.drawOrbitalNet(ctx, 0.42);
+    if (state === "future") {
+      this.drawLivingRoutes(ctx, 1, 0.9);
+      this.drawMatureBonds(ctx, 0.9);
       return;
     }
 
-    this.drawForumVolume(ctx);
-    this.drawOrbitalNet(ctx);
+    if (state === "qr") {
+      this.drawLivingRoutes(ctx, 0.88, 0.62);
+      this.drawMatureBonds(ctx, 1.08);
+      return;
+    }
+
+    this.drawLivingRoutes(ctx, 0.72, 0.5);
+    this.drawMatureBonds(ctx, 0.62);
     this.drawEnergyTraces(ctx);
   }
 
@@ -271,40 +442,270 @@ export class VisualSystem {
 
   drawDualGenerationField(ctx, converged = false) {
     const base = Math.min(this.width, this.height);
-    const left = [this.width * 0.54, this.height * 0.48];
-    const right = [this.width * 0.76, this.height * 0.5];
+    const vision = [this.width * 0.64, this.height * 0.46];
+    const youngCenter = [this.width * 0.41, this.height * 0.5];
+    const experienceCenter = [this.width * 0.76, this.height * 0.46];
     const merge = converged ? 0.52 : 0;
     const centers = [
-      [lerp(left[0], this.width * 0.65, merge), lerp(left[1], this.height * 0.48, merge)],
-      [lerp(right[0], this.width * 0.65, merge), lerp(right[1], this.height * 0.48, merge)],
+      [lerp(youngCenter[0], this.width * 0.65, merge), lerp(youngCenter[1], this.height * 0.48, merge)],
+      [lerp(experienceCenter[0], this.width * 0.65, merge), lerp(experienceCenter[1], this.height * 0.48, merge)],
     ];
-    const colors = [CONFIG.palette.eventSilver, CONFIG.palette.eventCyan];
 
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    for (let c = 0; c < centers.length; c += 1) {
-      const [cx, cy] = centers[c];
-      ctx.strokeStyle = rgba(colors[c], converged ? 0.14 : 0.11);
-      ctx.lineWidth = converged ? 1.4 : 1;
-      for (let i = 0; i < 4; i += 1) {
-        const r = base * (0.1 + i * 0.045);
+    if (!converged) {
+      ctx.lineCap = "round";
+
+      const youngGlow = ctx.createRadialGradient(youngCenter[0] - base * 0.04, youngCenter[1], 0, youngCenter[0], youngCenter[1], base * 0.48);
+      youngGlow.addColorStop(0, rgba(CONFIG.palette.eventCyan, 0.12));
+      youngGlow.addColorStop(0.45, rgba(CONFIG.palette.eventRed, 0.06));
+      youngGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = youngGlow;
+      ctx.fillRect(youngCenter[0] - base * 0.52, youngCenter[1] - base * 0.32, base * 1.04, base * 0.64);
+
+      const experienceGlow = ctx.createRadialGradient(
+        experienceCenter[0],
+        experienceCenter[1],
+        0,
+        experienceCenter[0],
+        experienceCenter[1],
+        base * 0.34,
+      );
+      experienceGlow.addColorStop(0, rgba(CONFIG.palette.eventSilver, 0.18));
+      experienceGlow.addColorStop(0.5, rgba(CONFIG.palette.eventMagenta, 0.1));
+      experienceGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = experienceGlow;
+      ctx.fillRect(experienceCenter[0] - base * 0.42, experienceCenter[1] - base * 0.29, base * 0.84, base * 0.58);
+
+      const visionGlow = ctx.createRadialGradient(vision[0], vision[1], 0, vision[0], vision[1], base * 0.42);
+      visionGlow.addColorStop(0, rgba(CONFIG.palette.eventSilver, 0.18));
+      visionGlow.addColorStop(0.28, rgba(CONFIG.palette.eventCyan, 0.1));
+      visionGlow.addColorStop(0.58, rgba(CONFIG.palette.eventRed, 0.06));
+      visionGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = visionGlow;
+      ctx.fillRect(vision[0] - base * 0.44, vision[1] - base * 0.3, base * 0.88, base * 0.6);
+
+      ctx.save();
+      ctx.setLineDash([base * 0.018, base * 0.026]);
+      for (let i = 0; i < 10; i += 1) {
+        const r = base * (0.17 + i * 0.028);
+        const start = this.time * (0.42 + i * 0.024) + i * 0.58;
+        const end = start + TAU * (0.12 + (i % 4) * 0.028);
+        const flicker = Math.max(0, Math.sin(this.time * 2.7 + i * 0.9));
+        ctx.strokeStyle = rgba(i % 2 ? CONFIG.palette.eventRed : CONFIG.palette.eventCyan, 0.04 + flicker * 0.08);
+        ctx.lineWidth = 0.75 + (i % 3) * 0.18;
         ctx.beginPath();
-        ctx.ellipse(cx, cy, r, r * 0.48, c === 0 ? -0.16 : 0.18, 0, TAU);
+        ctx.ellipse(youngCenter[0] - base * 0.04, youngCenter[1], r, r * 0.46, 0.12, start, end);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      for (let i = 0; i < 9; i += 1) {
+        const r = base * (0.09 + i * 0.024);
+        const start = -this.time * 0.02 + i * 0.18;
+        ctx.strokeStyle = rgba(i % 2 ? CONFIG.palette.eventMagenta : CONFIG.palette.eventSilver, 0.14 + i * 0.028);
+        ctx.lineWidth = 1.35 + i * 0.14;
+        ctx.beginPath();
+        ctx.ellipse(experienceCenter[0], experienceCenter[1], r, r * 0.62, -0.07, start, start + TAU * 0.72);
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 9; i += 1) {
+        const t = i / 8;
+        const yOffset = (t - 0.5) * base * 0.2;
+        const leftAlpha = 0.045 + Math.max(0, Math.sin(this.time * 1.8 + i)) * 0.035;
+        ctx.strokeStyle = rgba(i % 2 ? CONFIG.palette.eventRed : CONFIG.palette.eventCyan, leftAlpha);
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(youngCenter[0] + base * 0.06, youngCenter[1] + yOffset);
+        ctx.bezierCurveTo(
+          lerp(youngCenter[0], vision[0], 0.35),
+          youngCenter[1] + yOffset - base * 0.05,
+          lerp(youngCenter[0], vision[0], 0.76),
+          vision[1] - yOffset * 0.25,
+          vision[0],
+          vision[1],
+        );
+        ctx.stroke();
+
+        ctx.strokeStyle = rgba(i % 2 ? CONFIG.palette.eventMagenta : CONFIG.palette.eventSilver, 0.075 + t * 0.032);
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.moveTo(experienceCenter[0] - base * 0.12, experienceCenter[1] + yOffset * 0.62);
+        ctx.bezierCurveTo(
+          lerp(experienceCenter[0], vision[0], 0.35),
+          experienceCenter[1] - base * 0.025 + yOffset * 0.28,
+          lerp(experienceCenter[0], vision[0], 0.74),
+          vision[1] + yOffset * 0.22,
+          vision[0],
+          vision[1],
+        );
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 7; i += 1) {
+        const phase = (this.time * 0.08 + i / 7) % 1;
+        const hybridColor = i % 3 === 0 ? CONFIG.palette.eventSilver : i % 3 === 1 ? CONFIG.palette.eventCyan : CONFIG.palette.eventRed;
+        ctx.strokeStyle = rgba(hybridColor, 0.16 + (1 - phase) * 0.08);
+        ctx.lineWidth = 1 + i * 0.22;
+        ctx.beginPath();
+        ctx.ellipse(vision[0], vision[1], base * (0.11 + phase * 0.15), base * (0.06 + phase * 0.085), 0.08, 0, TAU);
         ctx.stroke();
       }
     }
 
     if (converged) {
-      ctx.strokeStyle = rgba(CONFIG.palette.eventMagenta, 0.13);
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 7; i += 1) {
-        const y = this.height * (0.34 + i * 0.045);
+      ctx.lineCap = "round";
+      for (let i = 0; i < 10; i += 1) {
+        const y = this.height * (0.31 + i * 0.044);
+        ctx.strokeStyle = rgba(this.colors[i % this.colors.length], 0.1 + this.params.network * 0.08);
+        ctx.lineWidth = 1.2 + (i % 3) * 0.25;
         ctx.beginPath();
         ctx.moveTo(centers[0][0] - base * 0.14, y);
-        ctx.bezierCurveTo(this.width * 0.6, y - 24, this.width * 0.7, y + 24, centers[1][0] + base * 0.14, y);
+        ctx.bezierCurveTo(this.width * 0.58, y - base * 0.06, this.width * 0.72, y + base * 0.06, centers[1][0] + base * 0.14, y);
         ctx.stroke();
       }
     }
+    ctx.restore();
+  }
+
+  drawDualityForeground(ctx) {
+    const base = Math.min(this.width, this.height);
+    const vision = [this.width * 0.64, this.height * 0.46];
+    const experienceCenter = [this.width * 0.76, this.height * 0.46];
+    const groups = {
+      young: [],
+      experience: [],
+      hybrid: [],
+    };
+
+    for (const p of this.particles) {
+      groups[this.getDualityRole(p)].push(p);
+    }
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+
+    ctx.save();
+    ctx.setLineDash([base * 0.005, base * 0.018]);
+    for (let i = 0; i < 30; i += 1) {
+      const a = groups.young[(i * 3) % groups.young.length];
+      const b = groups.young[(i * 11 + 7) % groups.young.length];
+      if (!a || !b) continue;
+      const flicker = smoothstep(0.52, 1, (Math.sin(this.time * 4.2 + i * 0.73) + 1) / 2);
+      const color = i % 2 === 0 ? CONFIG.palette.eventCyan : CONFIG.palette.eventRed;
+      const bend = Math.sin(this.time * 1.7 + i) * base * 0.065;
+
+      ctx.strokeStyle = rgba(color, 0.024 + flicker * 0.12);
+      ctx.lineWidth = 0.55 + flicker * 0.62;
+      ctx.beginPath();
+      ctx.moveTo(a.px, a.py);
+      ctx.quadraticCurveTo((a.px + b.px) * 0.5 + bend, (a.py + b.py) * 0.5 - bend * 0.38, b.px, b.py);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    const experienceMaxDist = base * 0.16;
+    for (let i = 0; i < groups.experience.length; i += 1) {
+      const a = groups.experience[i];
+      for (let j = i + 1; j < groups.experience.length; j += 2) {
+        const b = groups.experience[j];
+        if ((a.seed + b.seed) % 5 === 0) continue;
+        const dist = Math.hypot(a.px - b.px, a.py - b.py);
+        if (dist > experienceMaxDist) continue;
+        const strength = 1 - dist / experienceMaxDist;
+        ctx.strokeStyle = rgba((i + j) % 4 === 0 ? CONFIG.palette.eventMagenta : CONFIG.palette.eventSilver, 0.075 + strength * 0.3);
+        ctx.lineWidth = 0.9 + strength * 2;
+        ctx.beginPath();
+        ctx.moveTo(a.px, a.py);
+        ctx.lineTo(b.px, b.py);
+        ctx.stroke();
+      }
+    }
+
+    const structuralPoints = [];
+    for (let i = 0; i < 28; i += 1) {
+      const angle = (i / 28) * TAU - this.time * 0.014;
+      const radius = base * (0.09 + seededUnit(i + 330) * 0.18);
+      structuralPoints.push([
+        experienceCenter[0] + Math.cos(angle) * radius,
+        experienceCenter[1] + Math.sin(angle) * radius * 0.62,
+      ]);
+    }
+    for (let i = 0; i < structuralPoints.length; i += 1) {
+      const a = structuralPoints[i];
+      for (let step = 1; step <= 3; step += 1) {
+        const b = structuralPoints[(i + step) % structuralPoints.length];
+        const dist = Math.hypot(a[0] - b[0], a[1] - b[1]);
+        if (dist > base * 0.17 || (i + step) % 4 === 0) continue;
+        ctx.strokeStyle = rgba((i + step) % 5 === 0 ? CONFIG.palette.eventMagenta : CONFIG.palette.eventSilver, 0.1 + (1 - dist / (base * 0.17)) * 0.15);
+        ctx.lineWidth = 0.8 + step * 0.16;
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = rgba(CONFIG.palette.eventSilver, 0.24);
+      ctx.beginPath();
+      ctx.arc(a[0], a[1], 1.7, 0, TAU);
+      ctx.fill();
+    }
+
+    const hybridMaxDist = base * 0.22;
+    for (let i = 0; i < groups.hybrid.length; i += 1) {
+      const a = groups.hybrid[i];
+      const color = i % 3 === 0 ? CONFIG.palette.eventSilver : i % 3 === 1 ? CONFIG.palette.eventCyan : CONFIG.palette.eventRed;
+      ctx.strokeStyle = rgba(color, 0.2);
+      ctx.lineWidth = 1.45;
+      ctx.beginPath();
+      ctx.moveTo(vision[0], vision[1]);
+      ctx.quadraticCurveTo((vision[0] + a.px) * 0.5, vision[1] - base * 0.035, a.px, a.py);
+      ctx.stroke();
+
+      const youngBridge = groups.young[(i * 5 + 3) % groups.young.length];
+      const experienceBridge = groups.experience[(i * 7 + 2) % groups.experience.length];
+      if (youngBridge) {
+        ctx.strokeStyle = rgba(i % 2 === 0 ? CONFIG.palette.eventCyan : CONFIG.palette.eventRed, 0.075);
+        ctx.lineWidth = 0.95;
+        ctx.beginPath();
+        ctx.moveTo(youngBridge.px, youngBridge.py);
+        ctx.quadraticCurveTo(lerp(youngBridge.px, a.px, 0.58), lerp(youngBridge.py, a.py, 0.58) - base * 0.035, a.px, a.py);
+        ctx.stroke();
+      }
+      if (experienceBridge) {
+        ctx.strokeStyle = rgba(i % 2 === 0 ? CONFIG.palette.eventSilver : CONFIG.palette.eventMagenta, 0.12);
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.moveTo(experienceBridge.px, experienceBridge.py);
+        ctx.quadraticCurveTo(lerp(experienceBridge.px, a.px, 0.48), lerp(experienceBridge.py, a.py, 0.48) + base * 0.025, a.px, a.py);
+        ctx.stroke();
+      }
+
+      for (let j = i + 1; j < groups.hybrid.length; j += 1) {
+        const b = groups.hybrid[j];
+        const dist = Math.hypot(a.px - b.px, a.py - b.py);
+        if (dist > hybridMaxDist) continue;
+        const strength = 1 - dist / hybridMaxDist;
+        ctx.strokeStyle = rgba((i + j) % 3 === 0 ? CONFIG.palette.eventSilver : (i + j) % 3 === 1 ? CONFIG.palette.eventCyan : CONFIG.palette.eventRed, 0.1 + strength * 0.28);
+        ctx.lineWidth = 1 + strength * 1.75;
+        ctx.beginPath();
+        ctx.moveTo(a.px, a.py);
+        ctx.lineTo(b.px, b.py);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = rgba(color, 0.5);
+      ctx.beginPath();
+      ctx.arc(a.px, a.py, 3, 0, TAU);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = rgba(CONFIG.palette.eventSilver, 0.48);
+    ctx.beginPath();
+    ctx.arc(vision[0], vision[1], 4.8, 0, TAU);
+    ctx.fill();
     ctx.restore();
   }
 
@@ -368,6 +769,92 @@ export class VisualSystem {
       ctx.strokeStyle = rgba(i % 3 === 0 ? this.colors[1] : CONFIG.palette.eventSilver, amount * (0.55 + phase * 0.35));
       ctx.stroke();
     }
+    ctx.restore();
+  }
+
+  drawLivingRoutes(ctx, scale = 1, persistence = 0.55) {
+    const cx = this.width * 0.64;
+    const cy = this.height * 0.47;
+    const base = Math.min(this.width, this.height);
+    const routeCount = 9;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+
+    for (let i = 0; i < routeCount; i += 1) {
+      const seed = this.momentHash + i * 31;
+      const lane = i % this.colors.length;
+      const startAngle = seededUnit(seed + 3) * TAU;
+      const endAngle = startAngle + (seededUnit(seed + 9) > 0.5 ? 1 : -1) * (0.45 + seededUnit(seed + 11) * 0.7);
+      const startR = base * (0.34 + seededUnit(seed + 15) * 0.32);
+      const endR = base * (0.08 + seededUnit(seed + 17) * 0.16);
+      const startX = cx + Math.cos(startAngle) * startR;
+      const startY = cy + Math.sin(startAngle) * startR * 0.58;
+      const endX = cx + Math.cos(endAngle) * endR;
+      const endY = cy + Math.sin(endAngle) * endR * 0.52;
+      const controlX = cx + Math.cos((startAngle + endAngle) * 0.5 + Math.PI / 2) * base * (0.16 + seededUnit(seed + 19) * 0.1);
+      const controlY = cy + Math.sin((startAngle + endAngle) * 0.5 + Math.PI / 2) * base * (0.08 + seededUnit(seed + 23) * 0.08);
+      const life = 0.35 + 0.65 * smoothstep(0.12, 0.84, (Math.sin(this.time * (0.16 + i * 0.01) + seed) + 1) / 2);
+      const alpha = (0.035 + persistence * 0.075) * life * scale;
+
+      ctx.beginPath();
+      for (let j = 0; j <= 44; j += 1) {
+        const t = j / 44;
+        const x = quadraticPoint(startX, controlX, endX, t);
+        const y = quadraticPoint(startY, controlY, endY, t);
+        if (j === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = rgba(this.colors[lane], alpha);
+      ctx.lineWidth = 1 + scale * 0.5;
+      ctx.stroke();
+
+      const beadProgress = (seededUnit(seed + 29) + this.time * (0.035 + i * 0.002)) % 1;
+      const beadX = quadraticPoint(startX, controlX, endX, beadProgress);
+      const beadY = quadraticPoint(startY, controlY, endY, beadProgress);
+      ctx.fillStyle = rgba(this.colors[lane], alpha * 2.6);
+      ctx.beginPath();
+      ctx.arc(beadX, beadY, 1.5 + scale * 1.2, 0, TAU);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  drawMatureBonds(ctx, scale = 1) {
+    const cx = this.width * 0.65;
+    const cy = this.height * 0.47;
+    const base = Math.min(this.width, this.height);
+    const state = this.current?.state;
+    const isTrust = state === "trust";
+    const amount =
+      (0.05 + this.params.network * (isTrust ? 0.18 : 0.12) + this.params.stability * (isTrust ? 0.11 : 0.08)) *
+      scale;
+    const bondCount = isTrust ? 34 : 18;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+
+    for (let i = 0; i < bondCount; i += 1) {
+      const a = this.particles[(i * (isTrust ? 5 : 7)) % this.particles.length];
+      const b = this.particles[(i * (isTrust ? 5 : 7) + (isTrust ? 24 : 31)) % this.particles.length];
+      const mx = (a.px + b.px) * 0.5;
+      const my = (a.py + b.py) * 0.5;
+      const pull = isTrust ? 0.1 : state === "qr" ? 0.55 : 0.28;
+      const cpX = lerp(mx, cx, pull);
+      const cpY = lerp(my, cy, pull) - base * (0.025 + (i % 3) * 0.012);
+      const alpha = amount * (isTrust ? 0.62 + (i % 5) * 0.1 : 0.42 + (i % 5) * 0.09);
+
+      ctx.strokeStyle = rgba(this.colors[i % this.colors.length], alpha);
+      ctx.lineWidth = isTrust ? 1.35 + scale * 0.72 : 1.1 + scale * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(a.px, a.py);
+      ctx.quadraticCurveTo(cpX, cpY, b.px, b.py);
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
@@ -445,31 +932,10 @@ export class VisualSystem {
       }
 
       if (state === "opening") {
-        const outbound = p.seed % 2 === 0;
-        const edgeAngle = seededUnit(seed + 5) * TAU;
-        const edgeX = cx + Math.cos(edgeAngle) * this.width * (0.48 + seededUnit(seed + 31) * 0.14);
-        const edgeY = cy + Math.sin(edgeAngle) * this.height * (0.34 + seededUnit(seed + 37) * 0.12);
-        const centerAngle =
-          seededUnit(seed + 12) * TAU +
-          this.momentTime * (0.035 + seededUnit(seed + 22) * 0.018) * (outbound ? 1 : -1);
-        const centerX = cx + Math.cos(centerAngle) * radiusBase * (0.34 + seededUnit(seed + 17) * 0.62);
-        const centerY = cy + Math.sin(centerAngle) * radiusBase * (0.22 + seededUnit(seed + 19) * 0.36);
-        const act = clamp(this.momentTime / 7.2, 0, 1);
-        const outboundProgress = smoothstep(0.02, 0.52, act);
-        const inboundProgress = smoothstep(0.3, 0.98, act);
-        const baseT = outbound ? outboundProgress : 1 - inboundProgress;
-        const breath = Math.sin(this.time * 0.2 + p.drift) * 0.018;
-        const t = clamp(baseT + breath, 0, 1);
-        const controlX = cx + Math.cos(edgeAngle * 0.62 + p.lane) * radiusBase * (0.58 + p.lane * 0.14);
-        const controlY = cy + Math.sin(edgeAngle * 0.62 + p.lane) * radiusBase * (0.3 + p.lane * 0.08);
-        const ax = outbound ? centerX : edgeX;
-        const ay = outbound ? centerY : edgeY;
-        const bx = outbound ? edgeX : centerX;
-        const by = outbound ? edgeY : centerY;
-        const tx = lerp(lerp(ax, controlX, t), lerp(controlX, bx, t), t);
-        const ty = lerp(lerp(ay, controlY, t), lerp(controlY, by, t), t);
-        p.px = lerp(p.px || tx, tx, 0.014 + stability * 0.008);
-        p.py = lerp(p.py || ty, ty, 0.014 + stability * 0.008);
+        const route = this.getOpeningRoute(p);
+        const position = this.getOpeningPosition(route, p.drift);
+        p.px = position.x;
+        p.py = position.y;
         continue;
       }
 
@@ -516,30 +982,45 @@ export class VisualSystem {
 
       if (state === "trust") {
         const trustAngle = seededUnit(seed) * TAU + this.time * 0.045;
-        const laneRadius = radiusBase * (0.85 + p.lane * 0.24 + (p.seed % 4) * 0.04);
+        const trustGrowth = smoothstep(0.4, 5.8, this.momentTime);
+        const laneRadius = radiusBase * (1.18 + trustGrowth * 1.05 + p.lane * 0.34 + (p.seed % 4) * 0.08);
         const tx = cx + Math.cos(trustAngle) * laneRadius;
-        const ty = cy + Math.sin(trustAngle) * laneRadius * 0.48;
-        p.px = lerp(p.px || tx, tx, 0.064);
-        p.py = lerp(p.py || ty, ty, 0.064);
+        const ty = cy + Math.sin(trustAngle) * laneRadius * 0.52;
+        p.px = lerp(p.px || tx, tx, 0.072);
+        p.py = lerp(p.py || ty, ty, 0.072);
         continue;
       }
 
-      if (state === "routes") {
-        const route = p.seed % 4;
-        const progress = (seededUnit(seed + 6) + this.time * (0.035 + route * 0.005)) % 1;
-        const startX = this.width * (0.44 + route * 0.08);
-        const x = startX + progress * this.width * 0.32;
-        const y =
-          this.height * (0.28 + route * 0.12) +
-          Math.sin(progress * TAU * (1.2 + route * 0.2) + p.drift) * this.height * 0.045;
-        p.px = lerp(p.px || x, x, 0.052);
-        p.py = lerp(p.py || y, y, 0.052);
+      if (state === "routes" || state === "future") {
+        const route = p.seed % 6;
+        const progress = (seededUnit(seed + 6) + this.time * (state === "future" ? 0.028 : 0.022) * (1 + route * 0.08)) % 1;
+        const routeAngle = seededUnit(route + this.momentHash) * TAU + route * 0.34;
+        const outer = radiusBase * (state === "future" ? 4.2 : 3.3);
+        const inner = radiusBase * (state === "future" ? 0.75 : 1.05);
+        const startX = cx + Math.cos(routeAngle) * outer;
+        const startY = cy + Math.sin(routeAngle) * outer * 0.58;
+        const endX = cx + Math.cos(routeAngle + 0.9) * inner;
+        const endY = cy + Math.sin(routeAngle + 0.9) * inner * 0.52;
+        const controlX = cx + Math.cos(routeAngle + Math.PI * 0.5) * radiusBase * (1.6 + route * 0.08);
+        const controlY = cy + Math.sin(routeAngle + Math.PI * 0.5) * radiusBase * (0.7 + route * 0.05);
+        const x = quadraticPoint(startX, controlX, endX, progress);
+        const y = quadraticPoint(startY, controlY, endY, progress);
+        p.px = lerp(p.px || x, x, 0.06);
+        p.py = lerp(p.py || y, y, 0.06);
         continue;
       }
 
-      if (state === "duality" || state === "convergence") {
+      if (state === "duality") {
+        const target = this.getDualityTarget(p);
+        const follow = target.young ? 0.14 : target.hybrid ? 0.09 : 0.034;
+        p.px = lerp(p.px || target.x, target.x, follow);
+        p.py = lerp(p.py || target.y, target.y, follow);
+        continue;
+      }
+
+      if (state === "convergence") {
         const side = p.seed % 2 === 0 ? -1 : 1;
-        const merge = state === "convergence" ? 0.68 : 0.24;
+        const merge = 0.68;
         const localCx = cx + side * this.width * (0.18 * (1 - merge));
         p.px = lerp(p.px || localCx, localCx + Math.cos(angle) * rx, 0.036 + stability * 0.016);
         p.py = lerp(p.py || cy, cy + Math.sin(angle * 1.35) * ry, 0.036 + stability * 0.016);
@@ -555,18 +1036,14 @@ export class VisualSystem {
         continue;
       }
 
-      if (state === "future") {
-        rx *= 1.4 + depth * 0.38;
-        ry *= 1.2 + depth * 0.28;
-      }
-
       if (state === "qr") {
-        const calmAngle = seededUnit(seed) * TAU + this.time * 0.025;
-        const ring = radiusBase * (0.85 + seededUnit(seed + 12) * 1.4);
-        const tx = cx + Math.cos(calmAngle) * ring;
-        const ty = cy + Math.sin(calmAngle) * ring * 0.52;
-        p.px = lerp(p.px || tx, tx, 0.035);
-        p.py = lerp(p.py || ty, ty, 0.035);
+        const calmAngle = seededUnit(seed) * TAU + this.time * 0.055;
+        const ring = radiusBase * (1.05 + seededUnit(seed + 12) * 1.15);
+        const route = Math.sin(this.time * 0.18 + p.drift) * radiusBase * 0.16;
+        const tx = cx + Math.cos(calmAngle) * (ring + route);
+        const ty = cy + Math.sin(calmAngle) * (ring * 0.52 + route * 0.22);
+        p.px = lerp(p.px || tx, tx, 0.045);
+        p.py = lerp(p.py || ty, ty, 0.045);
         continue;
       }
 
@@ -583,6 +1060,7 @@ export class VisualSystem {
 
   drawConnections(ctx) {
     const state = this.current?.state;
+    if (state === "duality") return;
     const isLatent = state === "latent";
     const distanceScale =
       {
@@ -592,8 +1070,12 @@ export class VisualSystem {
         impact: 0.78,
         community: 1.28,
         trust: 1.08,
-        routes: 0.42,
-        qr: 0.55,
+        routes: 0.58,
+        duality: 0.36,
+        convergence: 1.16,
+        present: 0.9,
+        future: 1.32,
+        qr: 1.28,
       }[state] ?? 1;
     const alphaScale =
       {
@@ -603,8 +1085,12 @@ export class VisualSystem {
         impact: 0.9,
         community: 1.55,
         trust: 1.25,
-        routes: 0.42,
-        qr: 0.42,
+        routes: 0.62,
+        duality: 0.22,
+        convergence: 1.4,
+        present: 1.08,
+        future: 1.5,
+        qr: 1.42,
       }[state] ?? 1;
     const maxDist = CONFIG.connectionDistance * (0.42 + this.params.network * 1.18) * (isLatent ? 0.56 : distanceScale);
     const boost = this.current?.asset?.placement === "background" ? 1.9 : 1;
@@ -638,14 +1124,61 @@ export class VisualSystem {
     const alphaBoost = this.current?.asset?.placement === "background" ? 1.45 : 1;
     const sizeBoost = this.current?.asset?.placement === "background" ? 0.82 : 1;
     const isLatent = this.current?.state === "latent";
+    const isOpening = this.current?.state === "opening";
+    const isDuality = this.current?.state === "duality";
     for (const p of this.particles) {
-      const color = this.colors[p.lane % this.colors.length];
+      const dualRole = isDuality ? this.getDualityRole(p) : null;
+      const youngDual = dualRole === "young";
+      const hybridDual = dualRole === "hybrid";
+      const color = isDuality
+        ? youngDual
+          ? p.seed % 3 === 0
+            ? CONFIG.palette.eventRed
+            : CONFIG.palette.eventCyan
+          : hybridDual
+            ? p.seed % 3 === 0
+              ? CONFIG.palette.eventSilver
+              : p.seed % 3 === 1
+                ? CONFIG.palette.eventCyan
+                : CONFIG.palette.eventRed
+            : CONFIG.palette.eventSilver
+        : this.colors[p.lane % this.colors.length];
+      const route = isOpening ? this.getOpeningRoute(p) : null;
+      const openingPresence = isOpening && route.outbound ? smoothstep(2.7, 3.7, this.momentTime) : 1;
       const pulse = isLatent
         ? 0.6 + Math.max(0, Math.sin(this.time * 1.15 + p.drift)) * 0.62
-        : 0.72 + Math.sin(this.time * 1.8 + p.drift) * 0.28;
-      ctx.fillStyle = rgba(color, Math.min(0.86, (0.42 + this.params.intensity * 0.38) * alphaBoost * (isLatent ? 0.86 : 1)));
+        : isOpening
+          ? 0.8 + Math.sin(this.time * 0.7 + p.drift) * 0.16
+          : isDuality
+            ? youngDual
+              ? 0.78 + Math.sin(this.time * 2.2 + p.drift) * 0.28
+              : hybridDual
+                ? 0.86 + Math.sin(this.time * 1.25 + p.drift) * 0.18
+                : 0.82 + Math.sin(this.time * 0.48 + p.drift) * 0.09
+          : 0.72 + Math.sin(this.time * 1.8 + p.drift) * 0.28;
+      const alpha = Math.min(
+        0.86,
+        (0.42 + this.params.intensity * 0.38) *
+          alphaBoost *
+          (isLatent ? 0.86 : 1) *
+          openingPresence *
+          (isDuality && youngDual ? 1.14 : isDuality && hybridDual ? 1.12 : isDuality ? 0.82 : 1),
+      );
+      if (alpha < 0.01) continue;
+      ctx.fillStyle = rgba(color, alpha);
       ctx.beginPath();
-      ctx.arc(p.px, p.py, p.size * pulse * (1 + this.params.intensity * 0.52) * sizeBoost * (isLatent ? 0.86 : 1), 0, TAU);
+      ctx.arc(
+        p.px,
+        p.py,
+        p.size *
+          pulse *
+          (1 + this.params.intensity * 0.52) *
+          sizeBoost *
+          (isLatent ? 0.86 : 1) *
+          (isDuality && youngDual ? 1.34 : isDuality && hybridDual ? 1.32 : isDuality ? 1.08 : 1),
+        0,
+        TAU,
+      );
       ctx.fill();
     }
   }
@@ -697,35 +1230,12 @@ export class VisualSystem {
   }
 
   drawArchitecture(ctx) {
-    const state = this.current?.state;
-    if (state !== "routes" && state !== "future") return;
-    const amount = this.params.architecture;
-    if (amount < 0.04) return;
-    ctx.save();
-    ctx.translate(this.width * 0.5, this.height * 0.5);
-    ctx.strokeStyle = rgba(CONFIG.palette.ink, 0.05 + amount * 0.16);
-    ctx.lineWidth = 1.2;
-    const w = this.width * (0.34 + amount * 0.16);
-    const h = this.height * (0.36 + amount * 0.12);
-    const skew = this.width * 0.07;
-    for (let i = 0; i < 8; i += 1) {
-      const y = -h / 2 + (h / 7) * i;
-      ctx.beginPath();
-      ctx.moveTo(-w / 2 + skew * (i / 8), y);
-      ctx.lineTo(w / 2 + skew * (i / 8), y - this.height * 0.08);
-      ctx.stroke();
-    }
-    for (let i = 0; i < 9; i += 1) {
-      const x = -w / 2 + (w / 8) * i;
-      ctx.beginPath();
-      ctx.moveTo(x, -h / 2);
-      ctx.lineTo(x + skew, h / 2 - this.height * 0.08);
-      ctx.stroke();
-    }
-    ctx.restore();
+    return;
   }
 
   drawArchive(ctx) {
+    const state = this.current?.state;
+    if (state !== "architecture") return;
     const amount = this.params.archive;
     if (amount < 0.04) return;
     ctx.save();
@@ -757,28 +1267,31 @@ export class VisualSystem {
     if (state === "opening") {
       this.drawOpeningEncounter(ctx);
     }
+    if (state === "duality") {
+      this.drawDualityForeground(ctx);
+    }
     if (state === "impact") {
       this.drawImpactRings(ctx, 0.7);
     }
     if (state === "community") {
-      this.drawCommunityPulse(ctx);
+      this.drawMatureBonds(ctx, 0.82);
     }
     if (state === "future") {
-      this.drawImpactRings(ctx, 1);
-      this.drawRoutes(ctx, 0.62);
-      this.drawConstructionLattice(ctx);
+      this.drawLivingRoutes(ctx, 1.1, 0.96);
+      this.drawMatureBonds(ctx, 1.12);
     }
     if (state === "routes") {
-      this.drawRoutes(ctx, 1);
+      this.drawLivingRoutes(ctx, 1, 0.72);
     }
     if (state === "trust") {
-      this.drawTrustBridges(ctx);
+      this.drawTrustGrowth(ctx);
     }
     if (state === "present") {
-      this.drawPresentReveal(ctx);
+      this.drawYouthReveal(ctx);
     }
     if (state === "qr") {
-      this.drawContinuityHalo(ctx);
+      this.drawLivingRoutes(ctx, 0.94, 0.82);
+      this.drawMatureBonds(ctx, 1.18);
     }
   }
 
@@ -786,58 +1299,66 @@ export class VisualSystem {
     const cx = this.width * 0.64;
     const cy = this.height * 0.46;
     const base = Math.min(this.width, this.height);
-    const act = clamp(this.momentTime / 7.2, 0, 1);
-    const outboundProgress = smoothstep(0.02, 0.52, act);
-    const inboundProgress = smoothstep(0.3, 0.98, act);
+    const meetingGlow = smoothstep(5.8, 7, this.momentTime) * (1 - smoothstep(8.2, 9.6, this.momentTime));
+    const finalPull = smoothstep(8.4, 15.2, this.momentTime);
 
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     ctx.lineWidth = 1.2;
 
-    for (let i = 0; i < 9; i += 1) {
-      const outbound = i % 2 === 0;
-      const seed = this.momentHash + i * 19;
-      const edgeAngle = seededUnit(seed + 5) * TAU;
-      const edgeX = cx + Math.cos(edgeAngle) * this.width * (0.46 + seededUnit(seed + 31) * 0.14);
-      const edgeY = cy + Math.sin(edgeAngle) * this.height * (0.32 + seededUnit(seed + 37) * 0.12);
-      const centerAngle = seededUnit(seed + 12) * TAU + this.momentTime * 0.026 * (outbound ? 1 : -1);
-      const centerX = cx + Math.cos(centerAngle) * base * 0.09;
-      const centerY = cy + Math.sin(centerAngle) * base * 0.04;
-      const controlX = cx + Math.cos(edgeAngle * 0.62 + i) * base * (0.11 + (i % 3) * 0.018);
-      const controlY = cy + Math.sin(edgeAngle * 0.62 + i) * base * (0.055 + (i % 3) * 0.012);
-      const ax = outbound ? centerX : edgeX;
-      const ay = outbound ? centerY : edgeY;
-      const bx = outbound ? edgeX : centerX;
-      const by = outbound ? edgeY : centerY;
-      const routeAlpha = outbound ? 0.055 + outboundProgress * 0.04 : 0.045 + inboundProgress * 0.06;
+    for (let i = 0; i < 12; i += 1) {
+      const p = this.particles[(i * 11) % this.particles.length];
+      const route = this.getOpeningRoute(p);
+      const position = this.getOpeningPosition(route, p.drift);
+      const firstProgress = route.outbound ? position.outboundProgress : position.inboundProgress;
+      const routeAlpha = (route.outbound ? 0.018 + firstProgress * 0.07 : 0.045 + firstProgress * 0.08) * (1 - finalPull * 0.35);
       const color = this.colors[i % this.colors.length];
+      const startX = route.outbound ? route.coreX : route.farX;
+      const startY = route.outbound ? route.coreY : route.farY;
+      const controlX = route.outbound ? route.outboundControlX : route.inboundControlX;
+      const controlY = route.outbound ? route.outboundControlY : route.inboundControlY;
 
       ctx.beginPath();
       for (let j = 0; j <= 30; j += 1) {
         const t = j / 30;
-        const x = lerp(lerp(ax, controlX, t), lerp(controlX, bx, t), t);
-        const y = lerp(lerp(ay, controlY, t), lerp(controlY, by, t), t);
+        const x = quadraticPoint(startX, controlX, route.encounterX, t);
+        const y = quadraticPoint(startY, controlY, route.encounterY, t);
         if (j === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.strokeStyle = rgba(color, routeAlpha * this.params.intensity);
       ctx.stroke();
 
-      const beadT = outbound ? outboundProgress : inboundProgress;
-      const beadX = lerp(lerp(ax, controlX, beadT), lerp(controlX, bx, beadT), beadT);
-      const beadY = lerp(lerp(ay, controlY, beadT), lerp(controlY, by, beadT), beadT);
-      ctx.fillStyle = rgba(color, (0.18 + this.params.intensity * 0.18) * (outbound ? 0.9 : 1));
       ctx.beginPath();
-      ctx.arc(beadX, beadY, 2.2 + this.params.intensity * 1.8, 0, TAU);
+      for (let j = 0; j <= 24; j += 1) {
+        const t = j / 24;
+        const x = quadraticPoint(route.encounterX, route.finalControlX, route.finalX, t);
+        const y = quadraticPoint(route.encounterY, route.finalControlY, route.finalY, t);
+        if (j === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = rgba(color, (0.026 + finalPull * 0.07) * this.params.intensity);
+      ctx.stroke();
+
+      const beadAlpha = route.outbound ? smoothstep(2.7, 3.7, this.momentTime) : 1;
+      ctx.fillStyle = rgba(color, (0.16 + this.params.intensity * 0.18) * beadAlpha);
+      ctx.beginPath();
+      ctx.arc(position.x, position.y, 2 + this.params.intensity * 1.7, 0, TAU);
       ctx.fill();
     }
 
+    ctx.strokeStyle = rgba(CONFIG.palette.eventSilver, 0.08 + meetingGlow * 0.22);
+    ctx.lineWidth = 1.4 + meetingGlow * 1.2;
+    ctx.beginPath();
+    ctx.ellipse(cx - base * 0.14, cy, base * (0.025 + meetingGlow * 0.035), base * (0.012 + meetingGlow * 0.02), 0, 0, TAU);
+    ctx.stroke();
+
     for (let i = 0; i < 3; i += 1) {
-      const phase = (this.momentTime * 0.08 + i / 3) % 1;
-      ctx.strokeStyle = rgba(this.colors[i], (1 - phase) * 0.11 * this.params.intensity);
+      const phase = (this.momentTime * 0.045 + i / 3) % 1;
+      ctx.strokeStyle = rgba(this.colors[i], (1 - phase) * (0.07 + finalPull * 0.09) * this.params.intensity);
       ctx.lineWidth = 1.1;
       ctx.beginPath();
-      ctx.ellipse(cx, cy, base * (0.1 + phase * 0.13), base * (0.05 + phase * 0.07), 0, 0, TAU);
+      ctx.ellipse(cx, cy, base * (0.08 + phase * 0.12), base * (0.04 + phase * 0.065), 0, 0, TAU);
       ctx.stroke();
     }
 
@@ -896,24 +1417,11 @@ export class VisualSystem {
     ctx.restore();
   }
 
-  drawTrustBridges(ctx) {
-    ctx.save();
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 6; i += 1) {
-      const y = this.height * (0.28 + i * 0.07);
-      const x1 = this.width * 0.48;
-      const x2 = this.width * 0.86;
-      const cp = this.width * (0.62 + Math.sin(this.time * 0.3 + i) * 0.02);
-      ctx.beginPath();
-      ctx.moveTo(x1, y);
-      ctx.quadraticCurveTo(cp, y - this.height * 0.08, x2, y + this.height * 0.02);
-      ctx.strokeStyle = rgba(this.colors[i % 3], 0.1 + this.params.stability * 0.14);
-      ctx.stroke();
-    }
-    ctx.restore();
+  drawTrustGrowth(ctx) {
+    this.drawMatureBonds(ctx, 1.28);
   }
 
-  drawPresentReveal(ctx) {
+  drawYouthReveal(ctx) {
     const cx = this.width * 0.66;
     const cy = this.height * 0.47;
     const base = Math.min(this.width, this.height);
@@ -925,6 +1433,17 @@ export class VisualSystem {
     glow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow;
     ctx.fillRect(cx - base * 0.36, cy - base * 0.36, base * 0.72, base * 0.72);
+
+    for (let i = 0; i < 16; i += 1) {
+      const p = this.particles[(i * 5 + 1) % this.particles.length];
+      const color = i % 2 === 0 ? CONFIG.palette.eventCyan : CONFIG.palette.eventRed;
+      ctx.strokeStyle = rgba(color, 0.12 + this.params.intensity * 0.12);
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.quadraticCurveTo((cx + p.px) * 0.5, cy - base * 0.08, p.px, p.py);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
