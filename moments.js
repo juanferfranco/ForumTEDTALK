@@ -315,12 +315,12 @@ export const moments = [
     copy: {
       es: {
         kicker: "Continuidad",
-        title: "QR con memorias / QR redes @centrodeeventosupb",
+        title: "Memorias / redes @centrodeeventosupb",
         subtitle: "",
       },
       pt: {
         kicker: "Continuidade",
-        title: "QR com anais / QR redes @centrodeeventosupb",
+        title: "Anais / redes @centrodeeventosupb",
         subtitle: "",
       },
     },

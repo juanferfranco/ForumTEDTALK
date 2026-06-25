@@ -14,10 +14,10 @@
         <div class="grain" aria-hidden="true"></div>
         <div class="vignette" aria-hidden="true"></div>
 
-        <div class="brand-lockup" aria-label="UPB Forum y Universidad Pontificia Bolivariana 90 años">
+        <div class="brand-lockup" aria-label="UPB Forum y 90 años">
           <img class="brand-logo brand-logo-forum" src="./assets/brand-forum.png" alt="UPB Fórum Centro de Eventos" />
           <span class="brand-divider" aria-hidden="true"></span>
-          <img class="brand-logo brand-logo-upb90" src="./assets/brand-upb90-lockup.png" alt="UPB 90 años 1936-2026" />
+          <img class="brand-logo brand-logo-90" src="./assets/brand-90.png" alt="90 años" />
         </div>
 
         <section class="copy-layer" aria-live="polite">
@@ -30,15 +30,15 @@
           <img id="moment-image" alt="" />
         </figure>
 
-        <aside class="qr-layer" id="qr-layer" aria-label="Códigos QR de cierre">
-          <div class="qr-block">
+        <aside class="qr-layer" id="qr-layer" aria-label="Enlaces de cierre">
+          <a class="qr-block" id="qr-memory-link" href="#" target="_blank" rel="noopener noreferrer">
             <div class="qr-code" id="qr-memory" aria-hidden="true"></div>
-            <span>Memorias</span>
-          </div>
-          <div class="qr-block">
+            <span id="qr-memory-label">Memorias</span>
+          </a>
+          <a class="qr-block" id="qr-social-link" href="#" target="_blank" rel="noopener noreferrer">
             <div class="qr-code" id="qr-social" aria-hidden="true"></div>
-            <span>@centrodeeventosupb</span>
-          </div>
+            <span id="qr-social-label">@centrodeeventosupb</span>
+          </a>
         </aside>
 
         <nav class="operator-ui" id="operator-ui" aria-label="Controles de operacion">
@@ -55,6 +55,9 @@
           </button>
           <button class="icon-button" id="fullscreen-button" type="button" aria-label="Pantalla completa" title="Pantalla completa">
             <span aria-hidden="true">⛶</span>
+          </button>
+          <button class="icon-button" id="help-button" type="button" aria-label="Mostrar ayuda" title="Ayuda">
+            <span aria-hidden="true">?</span>
           </button>
         </nav>
 

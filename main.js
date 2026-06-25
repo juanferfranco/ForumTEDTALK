@@ -15,12 +15,18 @@ const operatorUi = document.querySelector("#operator-ui");
 const qrLayer = document.querySelector("#qr-layer");
 const qrMemory = document.querySelector("#qr-memory");
 const qrSocial = document.querySelector("#qr-social");
+const qrMemoryLink = document.querySelector("#qr-memory-link");
+const qrSocialLink = document.querySelector("#qr-social-link");
+const qrMemoryLabel = document.querySelector("#qr-memory-label");
+const qrSocialLabel = document.querySelector("#qr-social-label");
 const assetFrame = document.querySelector("#moment-asset");
 const assetImage = document.querySelector("#moment-image");
 const languageButtons = [...document.querySelectorAll("[data-language]")];
+const helpButton = document.querySelector("#help-button");
 
 let activeIndex = 0;
-let showHelp = true;
+const compactViewport = window.matchMedia("(max-aspect-ratio: 1 / 1)");
+let showHelp = !compactViewport.matches;
 let activeLanguage = localStorage.getItem("forum-language") || CONFIG.defaultLanguage;
 let transitionTimer = 0;
 
@@ -97,13 +103,18 @@ function updateLanguageUi() {
     button.setAttribute("aria-pressed", String(isActive));
     button.textContent = languageLabels[button.dataset.language] || button.dataset.language.toUpperCase();
   }
+  const qrLabels = CONFIG.qr.labels?.[activeLanguage] || CONFIG.qr.labels?.[CONFIG.defaultLanguage] || {};
+  qrMemoryLabel.textContent = qrLabels.memory || "Memorias";
+  qrSocialLabel.textContent = qrLabels.social || "@centrodeeventosupb";
 }
 
 function setAsset(moment) {
-  if (moment.asset?.type === "image" && moment.asset.src) {
-    const isBackground = moment.asset.placement === "background";
-    assetImage.src = moment.asset.src;
-    assetImage.alt = moment.asset.alt || "";
+  const configuredAsset = CONFIG.assets.byMoment?.[moment.id];
+  const asset = configuredAsset === false ? null : configuredAsset || moment.asset;
+  if (asset?.type === "image" && asset.src) {
+    const isBackground = asset.placement === "background";
+    assetImage.src = asset.src;
+    assetImage.alt = asset.alt || "";
     assetFrame.classList.add("is-visible");
     assetFrame.classList.toggle("is-background", isBackground);
     stage.classList.toggle("has-background-asset", isBackground);
@@ -166,8 +177,13 @@ async function toggleFullscreen() {
 
 function toggleHelp() {
   showHelp = !showHelp;
+  updateHelpUi();
+}
+
+function updateHelpUi() {
   helpPanel.classList.toggle("is-hidden", !showHelp);
-  operatorUi.classList.toggle("is-hidden", !showHelp);
+  helpButton.setAttribute("aria-pressed", String(showHelp));
+  helpButton.setAttribute("aria-label", showHelp ? "Ocultar ayuda" : "Mostrar ayuda");
 }
 
 function tick() {
@@ -178,6 +194,7 @@ function tick() {
 document.querySelector("#next-button").addEventListener("click", nextMoment);
 document.querySelector("#prev-button").addEventListener("click", previousMoment);
 document.querySelector("#fullscreen-button").addEventListener("click", toggleFullscreen);
+helpButton.addEventListener("click", toggleHelp);
 
 for (const button of languageButtons) {
   button.addEventListener("click", () => {
@@ -225,8 +242,11 @@ stage.addEventListener("touchend", (event) => {
 });
 
 totalEl.textContent = String(moments.length);
+qrMemoryLink.href = CONFIG.qr.memoryUrl;
+qrSocialLink.href = CONFIG.qr.socialUrl;
 makeQrPattern(qrMemory, CONFIG.qr.memoryUrl, CONFIG.qr.memoryImage);
 makeQrPattern(qrSocial, CONFIG.qr.socialUrl, CONFIG.qr.socialImage);
 updateLanguageUi();
+updateHelpUi();
 setMoment(0);
 tick();

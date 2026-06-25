@@ -8,12 +8,30 @@ export const CONFIG = {
   transitionSpeed: 0.055,
   assets: {
     ceremonyImage: "./assets/ceremonia-grados-placeholder.png",
+    byMoment: {
+      "auditorio-grados": {
+        type: "image",
+        src: "./assets/ceremonia-grados-placeholder.png",
+        alt: "Ceremonia de grados en un auditorio universitario",
+        placement: "background",
+      },
+    },
   },
   qr: {
     memoryUrl: "https://juanferfranco.github.io/ForumTEDTALK/",
     socialUrl: "https://www.instagram.com/centrodeeventosupb/",
     memoryImage: "./assets/qr-memory.png",
     socialImage: "./assets/qr-social.png",
+    labels: {
+      es: {
+        memory: "Memorias",
+        social: "@centrodeeventosupb",
+      },
+      pt: {
+        memory: "Anais",
+        social: "@centrodeeventosupb",
+      },
+    },
   },
   palette: {
     base: "#070808",

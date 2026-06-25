@@ -128,11 +128,12 @@ pocas conexiones. La espiral convoca, pero todavia no organiza una comunidad.
 Decision: no usar grid, red orbital ni volumen arquitectonico en este momento.
 Debe sentirse como energia disponible, no aprovechada.
 
-Decision de marca: integrar los logos institucionales en la apertura con
-protagonismo claro, ubicados sobre la palabra RELEVO. El lockup UPB Forum y UPB
-90 anos aparece como firma de origen y contexto institucional, no como
-decoracion ni como tarjeta. Debe respirar con el fondo oscuro, mantener distancia
-del titulo y no competir con la activacion visual posterior.
+Decision de marca: los logos aparecen en todos los slides como una firma
+institucional constante y sobria. El logo de UPB Forum va a la izquierda y el
+simbolo de 90 anos va anclado al extremo derecho; no se usa el lockup UPB 90 anos completo
+para evitar redundancia con Forum. En el primer y ultimo slide la marca crece
+como apertura y cierre institucional; en los slides intermedios baja de escala,
+pero el texto `Anos` del simbolo de aniversario debe seguir siendo legible.
 
 ### 2. Un gran auditorio solo para hacer grados
 
@@ -281,7 +282,7 @@ Decision: eliminar grid, lattice y circulos. El futuro se representa con rutas
 que permanecen parcialmente, otras que aparecen y desaparecen, particulas que
 trabajan sobre caminos y vinculos que sostienen la construccion.
 
-### 13. QR con memorias / redes
+### 13. Memorias / anais y redes
 
 Concepto visual: **sintesis y continuidad**.
 
@@ -290,13 +291,10 @@ quedan hiperconectadas y las trayectorias vivas permanecen como memoria de todo
 el recorrido. La invitacion es seguir conectado con Forum despues de la charla.
 
 Decision: eliminar cuadros, circulos y archivo visual sin carga semantica. El
-cierre sintetiza espiral, comunidad, vinculos y rutas; el QR debe ser funcional,
-pero la visualidad de fondo debe sentirse como conclusion del sistema.
-
-Decision de marca: recuperar los logos en el cierre como firma institucional
-sobria, de menor escala y menor opacidad que en la apertura. No se integran en
-todos los slides para evitar ruido de marca; aparecen solo donde cumplen una
-funcion narrativa: origen al inicio y respaldo institucional al final.
+cierre sintetiza espiral, comunidad, vinculos y rutas. En escritorio aparecen
+codigos QR funcionales; en movil se sustituyen por hipervinculos a memorias
+(`Anais` en portugues) y redes sociales, porque escanear un QR desde el mismo
+celular no tiene sentido operativo.
 
 ## Decisiones de interfaz y operacion
 
@@ -318,10 +316,11 @@ personalizarlos despues si lo desea.
 ## Archivos importantes
 
 - `index.html`: estructura principal.
-- `styles.css`: layout, tipografia, capas, composicion QR.
-- `main.js`: control de momentos, teclado, idioma, assets.
+- `styles.css`: layout, tipografia, capas, composicion QR/enlaces y responsive.
+- `main.js`: control de momentos, teclado, idioma, assets configurables.
 - `moments.js`: textos ES/PT, estados y parametros visuales.
 - `visualSystem.js`: motor generativo y gramatica visual.
-- `config.js`: configuracion global, QR, paleta, idioma por defecto.
-- `assets/`: imagen de ceremonia y QR.
+- `config.js`: configuracion global, QR/enlaces, imagenes por slide, paleta,
+  idioma por defecto.
+- `assets/`: imagenes, logos y QR.
 
