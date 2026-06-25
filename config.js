@@ -10,7 +10,7 @@ export const CONFIG = {
     ceremonyImage: "./assets/ceremonia-grados-placeholder.png",
   },
   qr: {
-    memoryUrl: "https://centrodeeventos.upb.edu.co/",
+    memoryUrl: "https://juanferfranco.github.io/ForumTEDTALK/",
     socialUrl: "https://www.instagram.com/centrodeeventosupb/",
     memoryImage: "./assets/qr-memory.png",
     socialImage: "./assets/qr-social.png",

@@ -320,7 +320,7 @@ export const moments = [
       },
       pt: {
         kicker: "Continuidade",
-        title: "QR com memórias / QR redes @centrodeeventosupb",
+        title: "QR com anais / QR redes @centrodeeventosupb",
         subtitle: "",
       },
     },
