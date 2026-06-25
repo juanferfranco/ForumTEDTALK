@@ -130,6 +130,8 @@ function setMoment(index) {
   const moment = moments[activeIndex];
   const copy = copyFor(moment);
   window.clearTimeout(transitionTimer);
+  stage.classList.toggle("is-title-moment", activeIndex === 0);
+  stage.classList.toggle("is-closing-moment", activeIndex === moments.length - 1);
   copyLayer.classList.toggle("is-qr", moment.state === "qr");
   qrLayer.classList.toggle("is-visible", moment.state === "qr");
   copyLayer.classList.add("is-changing");

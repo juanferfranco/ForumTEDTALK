@@ -119,6 +119,29 @@ button {
   transform: translateY(18px);
 }
 
+.stage.is-title-moment .copy-layer {
+  bottom: clamp(54px, 8.2vh, 88px);
+  width: min(68%, 900px);
+}
+
+.stage.is-title-moment .eyebrow {
+  display: none;
+}
+
+.stage.is-title-moment h1 {
+  max-width: 13.8ch;
+  font-size: clamp(40px, 5.55vw, 92px);
+  line-height: 0.96;
+}
+
+.stage.is-title-moment .subtitle {
+  display: block;
+  margin-top: clamp(14px, 2vh, 22px);
+  color: rgba(8, 169, 221, 0.92);
+  font-size: clamp(15px, 1.45vw, 22px);
+  font-weight: 760;
+}
+
 .eyebrow {
   margin: 0 0 18px;
   color: var(--accent);
@@ -192,6 +215,78 @@ h1 {
 
 .subtitle:empty {
   display: none;
+}
+
+.brand-lockup {
+  position: absolute;
+  top: clamp(82px, 12vh, 104px);
+  left: clamp(36px, 7vw, 108px);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(18px, 2vw, 32px);
+  width: min(68vw, 940px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition:
+    opacity 700ms ease,
+    transform 900ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.stage.is-title-moment .brand-lockup {
+  opacity: 0.88;
+  transform: translateY(0);
+}
+
+.stage.is-closing-moment .brand-lockup {
+  top: clamp(34px, 5.2vh, 62px);
+  left: clamp(36px, 7vw, 108px);
+  gap: clamp(12px, 1.4vw, 20px);
+  width: min(44vw, 560px);
+  opacity: 0.58;
+  transform: translateY(0);
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.42));
+}
+
+.brand-logo-forum {
+  max-width: min(35vw, 470px);
+  max-height: clamp(40px, 6.4vh, 70px);
+}
+
+.brand-logo-upb90 {
+  max-width: min(29vw, 385px);
+  max-height: clamp(48px, 7.9vh, 90px);
+  opacity: 0.92;
+}
+
+.stage.is-closing-moment .brand-logo-forum {
+  max-width: min(22vw, 280px);
+  max-height: clamp(26px, 4vh, 44px);
+}
+
+.stage.is-closing-moment .brand-logo-upb90 {
+  max-width: min(18vw, 220px);
+  max-height: clamp(30px, 5vh, 56px);
+}
+
+.brand-divider {
+  display: block;
+  width: 1px;
+  height: clamp(46px, 7vh, 78px);
+  background: linear-gradient(180deg, transparent, rgba(246, 241, 232, 0.44), transparent);
+}
+
+.stage.is-closing-moment .brand-divider {
+  height: clamp(28px, 4.6vh, 46px);
 }
 
 .moment-asset {
@@ -480,6 +575,65 @@ h1 {
     right: 28px;
     bottom: 118px;
     width: auto;
+  }
+
+  .stage.is-title-moment .copy-layer {
+    bottom: 92px;
+    width: auto;
+  }
+
+  .stage.is-title-moment h1 {
+    max-width: 11.4ch;
+    font-size: clamp(34px, 10.4vw, 68px);
+    line-height: 0.98;
+  }
+
+  .stage.is-title-moment .subtitle {
+    font-size: clamp(14px, 3.8vw, 18px);
+  }
+
+  .brand-lockup {
+    top: 82px;
+    left: 28px;
+    right: 28px;
+    width: auto;
+    gap: 12px;
+  }
+
+  .brand-logo-forum {
+    max-width: 48vw;
+    max-height: 38px;
+  }
+
+  .brand-logo-upb90 {
+    max-width: 36vw;
+    max-height: 52px;
+  }
+
+  .brand-divider {
+    height: 38px;
+  }
+
+  .stage.is-closing-moment .brand-lockup {
+    top: 78px;
+    left: 28px;
+    right: 28px;
+    gap: 10px;
+    width: auto;
+  }
+
+  .stage.is-closing-moment .brand-logo-forum {
+    max-width: 42vw;
+    max-height: 32px;
+  }
+
+  .stage.is-closing-moment .brand-logo-upb90 {
+    max-width: 32vw;
+    max-height: 42px;
+  }
+
+  .stage.is-closing-moment .brand-divider {
+    height: 30px;
   }
 
   h1 {

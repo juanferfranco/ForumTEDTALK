@@ -10,12 +10,12 @@ export const moments = [
       es: {
         kicker: "Future Leaders Forum · Fórum UPB",
         title: "RELEVO GENERACIONAL: LA VENTAJA QUE NADIE ESTÁ APROVECHANDO",
-        subtitle: "",
+        subtitle: "@centrodeeventosupb",
       },
       pt: {
         kicker: "Future Leaders Forum · Fórum UPB",
         title: "RELEVO GERACIONAL: A VANTAGEM QUE NINGUÉM ESTÁ USANDO",
-        subtitle: "",
+        subtitle: "@centrodeeventosupb",
       },
     },
     state: "latent",
