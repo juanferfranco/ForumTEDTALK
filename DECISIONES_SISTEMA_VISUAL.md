@@ -2,20 +2,32 @@
 
 Este documento resume las decisiones conceptuales y de diseño tomadas hasta ahora
 para la experiencia web de la charla de Alma Lopez en Future Leaders Forum,
-Brasil. Sirve como brief de continuidad para retomar el proyecto en otro
-entorno de Codex sin perder la logica narrativa.
+Brasil.
 
 ## Naturaleza del proyecto
 
 La pieza no es una presentacion de slides ni un PowerPoint exportado. Es una
 experiencia escenica en navegador, construida con HTML, CSS y JavaScript, que
-acompanara una charla tipo TED Talk.
+acompañará una charla tipo TED Talk.
 
 La estructura narrativa tiene 13 momentos. Cada frase activa un estado visual
 distinto del sistema. La frase no se ilustra literalmente: se traduce a
 comportamiento, movimiento, densidad, relacion y composicion.
 
-La idea central aprobada es:
+La idea central:
+
+**En un principio, la Universidad creó un espacio solo para grados, pero se ha 
+convertido de dos generaciones (Alma y Lorena) que han transformado el espacio en 
+un territorio de encuentros y relaciones que va más alla de ofrecer simples 
+eventos por eso el título de la presentación es: RELEVO GENERACIONAL: LA 
+VENTAJA QUE NADIE ESTÁ APROVECHANDO. La ventaja es la perspectiva fresca que ofrece
+la generación jóven y la experiencia que aporta la generación más madura. Todo 
+en función de la misma VISIÓN. 
+
+Los eventos nunca fueron el objetivo. El impacto si. 
+Nos diferenciamos de otros centros de eventos de la ciudad en 
+las capacidades de la UPB como aliado a los eventos, como respaldo desde múltiples perspectivas**
+
 
 **Un espacio se transforma cuando las personas lo habitan, lo conectan y lo
 convierten en comunidad.**
@@ -279,30 +291,4 @@ personalizarlos despues si lo desea.
 - `visualSystem.js`: motor generativo y gramatica visual.
 - `config.js`: configuracion global, QR, paleta, idioma por defecto.
 - `assets/`: imagen de ceremonia y QR.
-- `qa/final/`: capturas de verificacion y hoja de contacto final.
 
-## Estado de verificacion
-
-Se verifico en navegador a 1280x720:
-
-- 13 momentos sin errores de consola.
-- Textos sin desbordes.
-- QR sin solape.
-- Idioma ES/PT funcionando.
-- Navegador dejado en portugues.
-
-La hoja de contacto final esta en:
-
-`qa/final/contact-sheet-final.png`
-
-## Pendientes recomendados
-
-1. Revisar con Alma si los textos en portugues son finales o si requieren ajuste
-   fino de tono brasileño.
-2. Reemplazar la imagen generica de grados por una foto real de Forum UPB si se
-   consigue.
-3. Revisar el QR final de memorias cuando exista la URL definitiva.
-4. Hacer una prueba en el computador real del evento, idealmente con proyector o
-   pantalla 16:9.
-5. Probar pantalla completa y operación con teclado durante varios minutos para
-   confirmar fluidez.

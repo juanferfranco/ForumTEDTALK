@@ -79,10 +79,10 @@ export const moments = [
     colors: ["#08a9dd", "#f7f7f4", "#f7353f"],
     behavior: {
       spiral: 0.5,
-      network: 0.12,
+      network: 0.07,
       architecture: 0,
       archive: 0.04,
-      stability: 0.28,
+      stability: 0.18,
     },
   },
   {

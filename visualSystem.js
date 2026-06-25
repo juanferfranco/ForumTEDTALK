@@ -4,6 +4,10 @@ const TAU = Math.PI * 2;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const lerp = (a, b, t) => a + (b - a) * t;
+const smoothstep = (edge0, edge1, value) => {
+  const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+};
 
 function hexToRgb(hex) {
   const clean = hex.replace("#", "");
@@ -42,6 +46,7 @@ export class VisualSystem {
     this.height = 1;
     this.dpr = 1;
     this.time = 0;
+    this.momentTime = 0;
     this.current = null;
     this.target = null;
     this.params = {
@@ -79,6 +84,7 @@ export class VisualSystem {
 
   setMoment(moment) {
     this.current = moment;
+    this.momentTime = 0;
     this.target = {
       ...moment.behavior,
       intensity: moment.intensity,
@@ -89,6 +95,7 @@ export class VisualSystem {
 
   update() {
     this.time += 1 / 60;
+    this.momentTime += 1 / 60;
     if (!this.target) return;
     for (const key of Object.keys(this.params)) {
       this.params[key] = lerp(this.params[key], this.target[key], CONFIG.transitionSpeed);
@@ -440,16 +447,29 @@ export class VisualSystem {
       if (state === "opening") {
         const outbound = p.seed % 2 === 0;
         const edgeAngle = seededUnit(seed + 5) * TAU;
-        const edgeX = cx + Math.cos(edgeAngle) * this.width * 0.55;
-        const edgeY = cy + Math.sin(edgeAngle) * this.height * 0.42;
-        const centerX = cx + Math.cos(angle) * radiusBase * (0.5 + seededUnit(seed + 12));
-        const centerY = cy + Math.sin(angle) * radiusBase * (0.32 + seededUnit(seed + 13) * 0.5);
-        const travel = (Math.sin(this.time * 0.42 + p.drift) + 1) / 2;
-        const t = outbound ? travel : 1 - travel;
-        const tx = lerp(centerX, edgeX, t);
-        const ty = lerp(centerY, edgeY, t);
-        p.px = lerp(p.px || tx, tx, 0.026);
-        p.py = lerp(p.py || ty, ty, 0.026);
+        const edgeX = cx + Math.cos(edgeAngle) * this.width * (0.48 + seededUnit(seed + 31) * 0.14);
+        const edgeY = cy + Math.sin(edgeAngle) * this.height * (0.34 + seededUnit(seed + 37) * 0.12);
+        const centerAngle =
+          seededUnit(seed + 12) * TAU +
+          this.momentTime * (0.035 + seededUnit(seed + 22) * 0.018) * (outbound ? 1 : -1);
+        const centerX = cx + Math.cos(centerAngle) * radiusBase * (0.34 + seededUnit(seed + 17) * 0.62);
+        const centerY = cy + Math.sin(centerAngle) * radiusBase * (0.22 + seededUnit(seed + 19) * 0.36);
+        const act = clamp(this.momentTime / 7.2, 0, 1);
+        const outboundProgress = smoothstep(0.02, 0.52, act);
+        const inboundProgress = smoothstep(0.3, 0.98, act);
+        const baseT = outbound ? outboundProgress : 1 - inboundProgress;
+        const breath = Math.sin(this.time * 0.2 + p.drift) * 0.018;
+        const t = clamp(baseT + breath, 0, 1);
+        const controlX = cx + Math.cos(edgeAngle * 0.62 + p.lane) * radiusBase * (0.58 + p.lane * 0.14);
+        const controlY = cy + Math.sin(edgeAngle * 0.62 + p.lane) * radiusBase * (0.3 + p.lane * 0.08);
+        const ax = outbound ? centerX : edgeX;
+        const ay = outbound ? centerY : edgeY;
+        const bx = outbound ? edgeX : centerX;
+        const by = outbound ? edgeY : centerY;
+        const tx = lerp(lerp(ax, controlX, t), lerp(controlX, bx, t), t);
+        const ty = lerp(lerp(ay, controlY, t), lerp(controlY, by, t), t);
+        p.px = lerp(p.px || tx, tx, 0.014 + stability * 0.008);
+        p.py = lerp(p.py || ty, ty, 0.014 + stability * 0.008);
         continue;
       }
 
@@ -633,6 +653,8 @@ export class VisualSystem {
   drawSpiral(ctx) {
     const cx = this.width * 0.66;
     const cy = this.height * 0.47;
+    const isOpening = this.current?.state === "opening";
+    const motionScale = isOpening ? 0.38 : 1;
     const turns = 4.8 + this.params.spiral * 3.4;
     const points = 340;
     ctx.save();
@@ -642,9 +664,9 @@ export class VisualSystem {
       ctx.beginPath();
       for (let i = 0; i < points; i += 1) {
         const t = i / (points - 1);
-        const angle = t * TAU * turns + this.time * (0.18 + lane * 0.025);
+        const angle = t * TAU * turns + this.time * (0.18 + lane * 0.025) * motionScale;
         const radius = t * Math.min(this.width, this.height) * (0.18 + this.params.spiral * 0.26);
-        const wobble = Math.sin(t * 18 + this.time * 0.8 + lane) * 10 * this.params.intensity;
+        const wobble = Math.sin(t * 18 + this.time * 0.8 * motionScale + lane) * 10 * this.params.intensity;
         const x = cx + Math.cos(angle) * (radius + wobble);
         const y = cy + Math.sin(angle) * (radius * 0.58 + wobble * 0.24);
         if (i === 0) ctx.moveTo(x, y);
@@ -657,7 +679,7 @@ export class VisualSystem {
     const coreColors = [CONFIG.palette.eventRed, CONFIG.palette.eventMagenta, CONFIG.palette.eventCyan];
     for (let lane = 0; lane < 3; lane += 1) {
       ctx.beginPath();
-      const offset = (lane / 3) * TAU + this.time * 0.25;
+      const offset = (lane / 3) * TAU + this.time * 0.25 * motionScale;
       for (let i = 0; i < 96; i += 1) {
         const t = i / 95;
         const angle = offset + t * TAU * 0.82;
@@ -732,6 +754,9 @@ export class VisualSystem {
 
   drawStateGesture(ctx) {
     const state = this.current?.state;
+    if (state === "opening") {
+      this.drawOpeningEncounter(ctx);
+    }
     if (state === "impact") {
       this.drawImpactRings(ctx, 0.7);
     }
@@ -755,6 +780,68 @@ export class VisualSystem {
     if (state === "qr") {
       this.drawContinuityHalo(ctx);
     }
+  }
+
+  drawOpeningEncounter(ctx) {
+    const cx = this.width * 0.64;
+    const cy = this.height * 0.46;
+    const base = Math.min(this.width, this.height);
+    const act = clamp(this.momentTime / 7.2, 0, 1);
+    const outboundProgress = smoothstep(0.02, 0.52, act);
+    const inboundProgress = smoothstep(0.3, 0.98, act);
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineWidth = 1.2;
+
+    for (let i = 0; i < 9; i += 1) {
+      const outbound = i % 2 === 0;
+      const seed = this.momentHash + i * 19;
+      const edgeAngle = seededUnit(seed + 5) * TAU;
+      const edgeX = cx + Math.cos(edgeAngle) * this.width * (0.46 + seededUnit(seed + 31) * 0.14);
+      const edgeY = cy + Math.sin(edgeAngle) * this.height * (0.32 + seededUnit(seed + 37) * 0.12);
+      const centerAngle = seededUnit(seed + 12) * TAU + this.momentTime * 0.026 * (outbound ? 1 : -1);
+      const centerX = cx + Math.cos(centerAngle) * base * 0.09;
+      const centerY = cy + Math.sin(centerAngle) * base * 0.04;
+      const controlX = cx + Math.cos(edgeAngle * 0.62 + i) * base * (0.11 + (i % 3) * 0.018);
+      const controlY = cy + Math.sin(edgeAngle * 0.62 + i) * base * (0.055 + (i % 3) * 0.012);
+      const ax = outbound ? centerX : edgeX;
+      const ay = outbound ? centerY : edgeY;
+      const bx = outbound ? edgeX : centerX;
+      const by = outbound ? edgeY : centerY;
+      const routeAlpha = outbound ? 0.055 + outboundProgress * 0.04 : 0.045 + inboundProgress * 0.06;
+      const color = this.colors[i % this.colors.length];
+
+      ctx.beginPath();
+      for (let j = 0; j <= 30; j += 1) {
+        const t = j / 30;
+        const x = lerp(lerp(ax, controlX, t), lerp(controlX, bx, t), t);
+        const y = lerp(lerp(ay, controlY, t), lerp(controlY, by, t), t);
+        if (j === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = rgba(color, routeAlpha * this.params.intensity);
+      ctx.stroke();
+
+      const beadT = outbound ? outboundProgress : inboundProgress;
+      const beadX = lerp(lerp(ax, controlX, beadT), lerp(controlX, bx, beadT), beadT);
+      const beadY = lerp(lerp(ay, controlY, beadT), lerp(controlY, by, beadT), beadT);
+      ctx.fillStyle = rgba(color, (0.18 + this.params.intensity * 0.18) * (outbound ? 0.9 : 1));
+      ctx.beginPath();
+      ctx.arc(beadX, beadY, 2.2 + this.params.intensity * 1.8, 0, TAU);
+      ctx.fill();
+    }
+
+    for (let i = 0; i < 3; i += 1) {
+      const phase = (this.momentTime * 0.08 + i / 3) % 1;
+      ctx.strokeStyle = rgba(this.colors[i], (1 - phase) * 0.11 * this.params.intensity);
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, base * (0.1 + phase * 0.13), base * (0.05 + phase * 0.07), 0, 0, TAU);
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 
   drawImpactRings(ctx, scale) {
