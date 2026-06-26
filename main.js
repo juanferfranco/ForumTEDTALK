@@ -1,6 +1,6 @@
-import { CONFIG } from "./config.js?v=grammar-18";
-import { languageLabels, moments } from "./moments.js?v=grammar-18";
-import { VisualSystem } from "./visualSystem.js?v=grammar-18";
+import { CONFIG } from "./config.js?v=grammar-20";
+import { languageLabels, moments } from "./moments.js?v=grammar-20";
+import { VisualSystem } from "./visualSystem.js?v=grammar-20";
 
 const canvas = document.querySelector("#visual-canvas");
 const stage = document.querySelector("#stage");

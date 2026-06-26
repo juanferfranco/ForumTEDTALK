@@ -14,7 +14,7 @@ export const moments = [
       },
       pt: {
         kicker: "Future Leaders Forum · Fórum UPB",
-        title: "RELEVO GERACIONAL: A VANTAGEM QUE NINGUÉM ESTÁ USANDO",
+        title: "RELEVO GERACIONAL: A VANTAGEM QUE NINGUÉM ESTÁ APROVEITANDO",
         subtitle: "@centrodeeventosupb",
       },
     },
