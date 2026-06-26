@@ -1,6 +1,6 @@
-import { CONFIG } from "./config.js";
-import { languageLabels, moments } from "./moments.js";
-import { VisualSystem } from "./visualSystem.js";
+import { CONFIG } from "./config.js?v=grammar-9";
+import { languageLabels, moments } from "./moments.js?v=grammar-9";
+import { VisualSystem } from "./visualSystem.js?v=grammar-9";
 
 const canvas = document.querySelector("#visual-canvas");
 const stage = document.querySelector("#stage");
@@ -24,6 +24,8 @@ const assetImage = document.querySelector("#moment-image");
 const languageButtons = [...document.querySelectorAll("[data-language]")];
 const helpButton = document.querySelector("#help-button");
 const resetButton = document.querySelector("#reset-button");
+const endButton = document.querySelector("#end-button");
+const mobileFullscreenButton = document.querySelector("#mobile-fullscreen-button");
 
 let activeIndex = 0;
 const compactViewport = window.matchMedia("(max-aspect-ratio: 1 / 1)");
@@ -149,7 +151,17 @@ function setMoment(index) {
   copyLayer.classList.add("is-changing");
   transitionTimer = window.setTimeout(() => {
     kickerEl.textContent = copy.kicker || CONFIG.brandLine;
-    titleEl.textContent = copy.title;
+    titleEl.replaceChildren();
+    if (moment.state === "qr") {
+      const socialLink = document.createElement("a");
+      socialLink.href = CONFIG.qr.socialUrl;
+      socialLink.target = "_blank";
+      socialLink.rel = "noopener noreferrer";
+      socialLink.textContent = copy.title;
+      titleEl.append(socialLink);
+    } else {
+      titleEl.textContent = copy.title;
+    }
     subtitleEl.textContent = copy.subtitle || "";
     copyLayer.classList.toggle("is-long", copy.title.length > 74);
     copyLayer.classList.toggle("is-very-long", copy.title.length > 104);
@@ -197,6 +209,8 @@ document.querySelector("#prev-button").addEventListener("click", previousMoment)
 document.querySelector("#fullscreen-button").addEventListener("click", toggleFullscreen);
 helpButton.addEventListener("click", toggleHelp);
 resetButton.addEventListener("click", () => setMoment(0));
+endButton.addEventListener("click", () => setMoment(moments.length - 1));
+mobileFullscreenButton.addEventListener("click", toggleFullscreen);
 
 for (const button of languageButtons) {
   button.addEventListener("click", () => {
