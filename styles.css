@@ -734,6 +734,14 @@ h1 {
     line-height: 1.08;
   }
 
+  .stage[data-moment="nuevas-rutas"] .copy-layer h1,
+  .stage[data-moment="nuevas-rutas"] .copy-layer.is-long h1,
+  .stage[data-moment="nuevas-rutas"] .copy-layer.is-very-long h1 {
+    max-width: 15.4ch;
+    font-size: clamp(18px, 4.8vw, 25px);
+    line-height: 1.06;
+  }
+
   .copy-layer.has-background-asset h1 {
     max-width: 14.8ch;
     font-size: clamp(28px, 7.2vw, 39px);
