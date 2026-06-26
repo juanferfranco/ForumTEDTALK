@@ -82,6 +82,7 @@ assets/slide-04-actores.webp
 assets/slide-05-impacto.webp
 assets/slide-08-rutas.webp
 assets/slide-12-futuro.webp
+assets/slide-13-cierre.webp
 ```
 
 Para reemplazarla, guarda una nueva foto con ese mismo nombre y formato en la

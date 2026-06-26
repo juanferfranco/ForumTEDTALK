@@ -39,6 +39,12 @@ window.CONFIG = {
         alt: "Auditorio Forum UPB preparado para un evento",
         placement: "background",
       },
+      "qr-cierre": {
+        type: "image",
+        src: "./assets/slide-13-cierre.webp",
+        alt: "Campus UPB al atardecer",
+        placement: "background",
+      },
     },
   },
   qr: {
