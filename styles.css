@@ -738,7 +738,7 @@ h1 {
   .stage[data-moment="nuevas-rutas"] .copy-layer.is-long h1,
   .stage[data-moment="nuevas-rutas"] .copy-layer.is-very-long h1 {
     max-width: 15.4ch;
-    font-size: clamp(18px, 4.8vw, 25px);
+    font-size: clamp(18px, 4.8vw, 28px);
     line-height: 1.06;
   }
 
