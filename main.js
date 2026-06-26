@@ -1,6 +1,6 @@
-import { CONFIG } from "./config.js?v=grammar-20";
-import { languageLabels, moments } from "./moments.js?v=grammar-20";
-import { VisualSystem } from "./visualSystem.js?v=grammar-20";
+import { CONFIG } from "./config.js?v=grammar-25";
+import { languageLabels, moments } from "./moments.js?v=grammar-25";
+import { VisualSystem } from "./visualSystem.js?v=grammar-25";
 
 const canvas = document.querySelector("#visual-canvas");
 const stage = document.querySelector("#stage");
@@ -31,9 +31,10 @@ const mobileFullscreenButton = document.querySelector("#mobile-fullscreen-button
 
 let activeIndex = 0;
 const compactViewport = window.matchMedia("(max-aspect-ratio: 1 / 1)");
-let showHelp = !compactViewport.matches;
+let showHelp = false;
 let activeLanguage = localStorage.getItem("forum-language") || CONFIG.defaultLanguage;
 let transitionTimer = 0;
+let assetClearTimer = 0;
 
 const visualSystem = new VisualSystem(canvas);
 
@@ -241,54 +242,73 @@ function updateLanguageUi() {
   qrSocialLabel.textContent = qrLabels.social || "@centrodeeventosupb";
 }
 
-function setAsset(moment) {
+function assetFor(moment) {
   const configuredAsset = CONFIG.assets.byMoment?.[moment.id];
-  const asset = configuredAsset === false ? null : configuredAsset || moment.asset;
+  return configuredAsset === false ? null : configuredAsset || moment.asset;
+}
+
+function setAsset(moment) {
+  window.clearTimeout(assetClearTimer);
+  const asset = assetFor(moment);
   if (asset?.type === "image" && asset.src) {
     const isBackground = asset.placement === "background";
-    assetImage.src = asset.src;
-    assetImage.alt = asset.alt || "";
-    assetFrame.classList.add("is-visible");
-    assetFrame.classList.toggle("is-background", isBackground);
-    stage.classList.toggle("has-background-asset", isBackground);
-    copyLayer.classList.toggle("has-asset", !isBackground);
-    copyLayer.classList.toggle("has-background-asset", isBackground);
+    const changeImage = assetImage.getAttribute("src") !== asset.src;
+    if (changeImage) {
+      assetFrame.classList.remove("is-visible");
+      assetClearTimer = window.setTimeout(() => {
+        assetFrame.classList.toggle("is-background", isBackground);
+        stage.classList.toggle("has-background-asset", isBackground);
+        assetImage.src = asset.src;
+        assetImage.alt = asset.alt || "";
+        assetFrame.classList.add("is-visible");
+      }, 140);
+    } else {
+      assetFrame.classList.toggle("is-background", isBackground);
+      stage.classList.toggle("has-background-asset", isBackground);
+      assetFrame.classList.add("is-visible");
+    }
     return;
   }
 
   assetFrame.classList.remove("is-visible");
-  assetFrame.classList.remove("is-background");
-  stage.classList.remove("has-background-asset");
-  copyLayer.classList.remove("has-asset");
-  copyLayer.classList.remove("has-background-asset");
-  window.setTimeout(() => {
+  assetClearTimer = window.setTimeout(() => {
     if (!assetFrame.classList.contains("is-visible")) {
+      assetFrame.classList.remove("is-background");
+      stage.classList.remove("has-background-asset");
       assetImage.removeAttribute("src");
       assetImage.alt = "";
     }
-  }, 620);
+  }, 430);
 }
 
 function setMoment(index) {
   activeIndex = Math.max(0, Math.min(moments.length - 1, index));
   const moment = moments[activeIndex];
   const copy = copyFor(moment);
+  const asset = assetFor(moment);
+  const hasImageAsset = asset?.type === "image" && asset.src;
+  const hasBackgroundAsset = hasImageAsset && asset.placement === "background";
   window.clearTimeout(transitionTimer);
-  stage.classList.toggle("is-title-moment", activeIndex === 0);
-  stage.classList.toggle("is-closing-moment", activeIndex === moments.length - 1);
-  copyLayer.classList.toggle("is-qr", moment.state === "qr");
   qrLayer.classList.toggle("is-visible", moment.state === "qr");
   copyLayer.classList.add("is-changing");
   transitionTimer = window.setTimeout(() => {
+    stage.classList.toggle("is-title-moment", activeIndex === 0);
+    stage.classList.toggle("is-closing-moment", activeIndex === moments.length - 1);
+    stage.dataset.moment = moment.id;
+    copyLayer.classList.toggle("is-qr", moment.state === "qr");
+    copyLayer.classList.toggle("has-asset", hasImageAsset && !hasBackgroundAsset);
+    copyLayer.classList.toggle("has-background-asset", hasBackgroundAsset);
+    copyLayer.classList.toggle("is-long", copy.title.length > 74);
+    copyLayer.classList.toggle("is-very-long", copy.title.length > 104);
     kickerEl.textContent = copy.kicker || CONFIG.brandLine;
     renderTitle(moment, copy);
     subtitleEl.textContent = copy.subtitle || "";
-    copyLayer.classList.toggle("is-long", copy.title.length > 74);
-    copyLayer.classList.toggle("is-very-long", copy.title.length > 104);
     numberEl.textContent = pad(activeIndex + 1);
     mobileNumberEl.textContent = pad(activeIndex + 1);
-    copyLayer.classList.remove("is-changing");
-  }, 180);
+    requestAnimationFrame(() => {
+      copyLayer.classList.remove("is-changing");
+    });
+  }, 140);
   setAsset(moment);
   visualSystem.setMoment(moment);
 }
