@@ -1,7 +1,3 @@
-import { CONFIG } from "./config.js?v=grammar-26";
-import { languageLabels, moments } from "./moments.js?v=grammar-26";
-import { VisualSystem } from "./visualSystem.js?v=grammar-26";
-
 const canvas = document.querySelector("#visual-canvas");
 const stage = document.querySelector("#stage");
 const titleEl = document.querySelector("#moment-title");

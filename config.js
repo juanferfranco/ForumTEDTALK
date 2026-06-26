@@ -1,4 +1,4 @@
-export const CONFIG = {
+window.CONFIG = {
   title: "Relevo generacional",
   brandLine: "Future Leaders Forum · Fórum UPB",
   defaultLanguage: "pt",

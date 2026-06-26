@@ -1,9 +1,9 @@
-export const languageLabels = {
+window.languageLabels = {
   es: "ES",
   pt: "PT",
 };
 
-export const moments = [
+window.moments = [
   {
     id: "relevo-generacional",
     copy: {

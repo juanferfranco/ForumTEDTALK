@@ -1,19 +1,8 @@
 # Relevo generacional | Experiencia TED Talk
 
-Experiencia web escenica para la charla de Alma Lopez en Future Leaders Forum,
-con 13 momentos operables por teclado y un sistema visual generativo 2.5D.
+## Abrir local
 
-## Correr local
-
-```powershell
-python -m http.server 4173
-```
-
-Luego abre:
-
-```text
-http://localhost:4173
-```
+La presentacion puede abrirse con doble clic en `index.html`.
 
 ## Controles
 

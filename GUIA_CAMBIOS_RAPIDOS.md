@@ -1,23 +1,15 @@
 # Guia de cambios rapidos
 
-Esta experiencia esta pensada para operar como una pieza escenica en navegador:
+Esta experiencia esta pensada para operar como una pieza escénica en navegador:
 no usa PowerPoint, no requiere internet para correr y separa los textos del motor
 visual.
 
 ## Como correrla
 
-1. Abre una terminal en esta carpeta.
-2. Ejecuta:
+### Opcion simple para presentadoras
 
-```powershell
-python -m http.server 4173
-```
+Haz doble clic en `index.html`. No requiere terminal ni instalar servidor.
 
-3. Abre `http://localhost:4173` en Chrome, Edge o Safari.
-4. Presiona `F` para pantalla completa.
-
-Si el computador no tiene Python, cualquier servidor estatico sirve. Por ejemplo:
-`npx serve .`
 
 ## Operacion durante la charla
 
@@ -73,14 +65,17 @@ defaultLanguage: "pt",
 
 Usa `"es"` para abrir en espanol.
 
-Alma no necesita editar codigo durante la charla: puede escoger `ES` o `PT` en
-la ayuda. Si quiere personalizar frases antes del evento, puede cambiar `title`,
-`kicker` o `subtitle` en el idioma correspondiente. Los subtitulos pueden
-quedar vacios con `subtitle: ""`.
+Durante la charla se puede escoger `ES` o `PT` en
+la ayuda. 
+
+Si quiere personalizar frases antes del evento, en el archivo `moments.js` puede c
+ambiar `title`, `kicker` o `subtitle` en el idioma correspondiente. 
+Los subtitulos pueden quedar vacios con `subtitle: ""`.
 
 ## Imagen de ceremonia de grados
 
-El momento 2 incluye una imagen generica temporal:
+El momento 2 incluye una imagen de Montería para cambiar a Medellín, simplemente 
+cambiar el nombre del archivo a ceremonia-grados-placeholder.png y reemplazarlo en la carpeta assets.
 
 ```text
 assets/ceremonia-grados-placeholder.png
@@ -93,8 +88,7 @@ La imagen se usa como fondo escenico intervenido, no como recuadro de slide.
 Funciona mejor si es horizontal, amplia, con buena profundidad y sin texto
 importante cerca de los bordes.
 
-Si quieres usar otro nombre, cambia el campo `src` del momento `auditorio-grados`
-en `moments.js`.
+Usa este enlace [squoosh](https://squoosh.app/) para optimizar la imagen y reducir el peso del archivo.
 
 ## Donde cambiar QR y parametros globales
 

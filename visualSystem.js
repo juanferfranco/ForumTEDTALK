@@ -1,5 +1,3 @@
-import { CONFIG } from "./config.js";
-
 const TAU = Math.PI * 2;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -39,7 +37,7 @@ function seededUnit(seed) {
   return x - Math.floor(x);
 }
 
-export class VisualSystem {
+class VisualSystem {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
@@ -1488,3 +1486,5 @@ export class VisualSystem {
     ctx.restore();
   }
 }
+
+window.VisualSystem = VisualSystem;
