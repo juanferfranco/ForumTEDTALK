@@ -74,17 +74,20 @@ Los subtitulos pueden quedar vacios con `subtitle: ""`.
 
 ## Imagen de ceremonia de grados
 
-El momento 2 incluye una imagen de Montería para cambiar a Medellín, simplemente 
-cambiar el nombre del archivo a ceremonia-grados-placeholder.png y reemplazarlo en la carpeta assets.
+Los momentos incluyen algunas imágenes. Son estas: 
 
 ```text
-assets/ceremonia-grados-placeholder.png
+assets/slide-02-grados.webp
+assets/slide-04-actores.webp
+assets/slide-05-impacto.webp
+assets/slide-08-rutas.webp
+assets/slide-12-futuro.webp
 ```
 
 Para reemplazarla, guarda una nueva foto con ese mismo nombre y formato en la
 carpeta `assets`. No hace falta tocar el codigo.
 
-La imagen se usa como fondo escenico intervenido, no como recuadro de slide.
+La imagen se usa como fondo escénico intervenido, no como recuadro de slide.
 Funciona mejor si es horizontal, amplia, con buena profundidad y sin texto
 importante cerca de los bordes.
 
