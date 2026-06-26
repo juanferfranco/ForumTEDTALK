@@ -293,8 +293,8 @@ class VisualSystem {
         this.height * 0.48,
         this.width * 0.48,
       );
-      haze.addColorStop(0, rgba(this.colors[1], 0.14 + this.params.intensity * 0.08));
-      haze.addColorStop(0.54, rgba(this.colors[0], 0.04));
+      haze.addColorStop(0, rgba(this.colors[1], 0.05 + this.params.intensity * 0.04));
+      haze.addColorStop(0.54, rgba(this.colors[0], 0.018));
       haze.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = haze;
       ctx.fillRect(0, 0, this.width, this.height);
