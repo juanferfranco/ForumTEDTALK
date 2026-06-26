@@ -115,10 +115,16 @@ class VisualSystem {
     }
   }
 
+  hasBackgroundAsset() {
+    const configuredAsset = CONFIG.assets.byMoment?.[this.current?.id];
+    const asset = configuredAsset === false ? null : configuredAsset || this.current?.asset;
+    return asset?.placement === "background";
+  }
+
   render() {
     this.update();
     const ctx = this.ctx;
-    const hasBackgroundAsset = this.current?.asset?.placement === "background";
+    const hasBackgroundAsset = this.hasBackgroundAsset();
     ctx.clearRect(0, 0, this.width, this.height);
     this.drawBackground(ctx, hasBackgroundAsset);
     this.drawSpatialMotifs(ctx);
@@ -1091,7 +1097,7 @@ class VisualSystem {
         qr: 1.42,
       }[state] ?? 1;
     const maxDist = CONFIG.connectionDistance * (0.42 + this.params.network * 1.18) * (isLatent ? 0.56 : distanceScale);
-    const boost = this.current?.asset?.placement === "background" ? 1.9 : 1;
+    const boost = this.hasBackgroundAsset() ? 0.72 : 1;
     ctx.lineWidth = 1;
     for (let i = 0; i < this.particles.length; i += 1) {
       const a = this.particles[i];
@@ -1119,8 +1125,8 @@ class VisualSystem {
   }
 
   drawParticles(ctx) {
-    const alphaBoost = this.current?.asset?.placement === "background" ? 1.45 : 1;
-    const sizeBoost = this.current?.asset?.placement === "background" ? 0.82 : 1;
+    const alphaBoost = this.hasBackgroundAsset() ? 0.82 : 1;
+    const sizeBoost = this.hasBackgroundAsset() ? 0.76 : 1;
     const isLatent = this.current?.state === "latent";
     const isOpening = this.current?.state === "opening";
     const isDuality = this.current?.state === "duality";
@@ -1190,7 +1196,7 @@ class VisualSystem {
     const points = 340;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    const boost = this.current?.asset?.placement === "background" ? 1.8 : 1;
+    const boost = this.hasBackgroundAsset() ? 1.34 : 1;
     for (let lane = 0; lane < 3; lane += 1) {
       ctx.beginPath();
       for (let i = 0; i < points; i += 1) {
