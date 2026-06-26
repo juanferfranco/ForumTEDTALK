@@ -254,26 +254,26 @@ h1 {
 }
 
 .brand-logo-forum {
-  max-width: min(27vw, 360px);
-  max-height: clamp(34px, 5.4vh, 92px);
+  max-width: min(31vw, 420px);
+  max-height: clamp(46px, 8.6vh, 112px);
 }
 
 .brand-logo-90 {
-  max-width: min(12vw, 158px);
-  max-height: clamp(58px, 9.4vh, 104px);
+  max-width: min(14vw, 184px);
+  max-height: clamp(70px, 11.8vh, 128px);
   opacity: 0.92;
 }
 
 .stage.is-title-moment .brand-logo-forum,
 .stage.is-closing-moment .brand-logo-forum {
-  max-width: min(38vw, 500px);
-  max-height: clamp(48px, 7.6vh, 108px);
+  max-width: min(42vw, 560px);
+  max-height: clamp(60px, 10.4vh, 136px);
 }
 
 .stage.is-title-moment .brand-logo-90,
 .stage.is-closing-moment .brand-logo-90 {
-  max-width: min(16vw, 212px);
-  max-height: clamp(76px, 12.3vh, 148px);
+  max-width: min(18vw, 244px);
+  max-height: clamp(88px, 15vh, 168px);
 }
 
 .brand-divider {
@@ -481,6 +481,24 @@ h1 {
   backdrop-filter: blur(14px);
 }
 
+.reset-button {
+  display: none;
+  min-height: 31px;
+  padding: 0 14px;
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgba(10, 10, 10, 0.42);
+  font-size: 12px;
+  font-weight: 780;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+
+.reset-button:active {
+  transform: scale(0.96);
+}
+
 .language-switch {
   display: inline-flex;
   align-items: center;
@@ -610,13 +628,13 @@ h1 {
   }
 
   .brand-logo-forum {
-    max-width: 52vw;
-    max-height: 38px;
+    max-width: 56vw;
+    max-height: 48px;
   }
 
   .brand-logo-90 {
-    max-width: 25vw;
-    max-height: 66px;
+    max-width: 28vw;
+    max-height: 76px;
   }
 
   .brand-divider {
@@ -629,14 +647,14 @@ h1 {
 
   .stage.is-title-moment .brand-logo-forum,
   .stage.is-closing-moment .brand-logo-forum {
-    max-width: 60vw;
-    max-height: 46px;
+    max-width: 64vw;
+    max-height: 56px;
   }
 
   .stage.is-title-moment .brand-logo-90,
   .stage.is-closing-moment .brand-logo-90 {
-    max-width: 28vw;
-    max-height: 78px;
+    max-width: 31vw;
+    max-height: 88px;
   }
 
   .stage.is-closing-moment .brand-divider {
@@ -654,15 +672,34 @@ h1 {
   }
 
   .operator-ui {
-    right: 50%;
-    transform: translateX(50%);
+    display: none;
   }
 
   .help-panel {
-    top: 74px;
+    top: auto;
     left: 18px;
     right: 18px;
+    bottom: max(18px, env(safe-area-inset-bottom));
     max-width: none;
+    justify-content: center;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .help-panel.is-hidden {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .help-panel span {
+    display: none;
+  }
+
+  .reset-button {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
   }
 

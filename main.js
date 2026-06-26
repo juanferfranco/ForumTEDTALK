@@ -23,6 +23,7 @@ const assetFrame = document.querySelector("#moment-asset");
 const assetImage = document.querySelector("#moment-image");
 const languageButtons = [...document.querySelectorAll("[data-language]")];
 const helpButton = document.querySelector("#help-button");
+const resetButton = document.querySelector("#reset-button");
 
 let activeIndex = 0;
 const compactViewport = window.matchMedia("(max-aspect-ratio: 1 / 1)");
@@ -195,6 +196,7 @@ document.querySelector("#next-button").addEventListener("click", nextMoment);
 document.querySelector("#prev-button").addEventListener("click", previousMoment);
 document.querySelector("#fullscreen-button").addEventListener("click", toggleFullscreen);
 helpButton.addEventListener("click", toggleHelp);
+resetButton.addEventListener("click", () => setMoment(0));
 
 for (const button of languageButtons) {
   button.addEventListener("click", () => {
