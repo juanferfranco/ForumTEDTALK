@@ -1,6 +1,6 @@
-import { CONFIG } from "./config.js?v=grammar-25";
-import { languageLabels, moments } from "./moments.js?v=grammar-25";
-import { VisualSystem } from "./visualSystem.js?v=grammar-25";
+import { CONFIG } from "./config.js?v=grammar-26";
+import { languageLabels, moments } from "./moments.js?v=grammar-26";
+import { VisualSystem } from "./visualSystem.js?v=grammar-26";
 
 const canvas = document.querySelector("#visual-canvas");
 const stage = document.querySelector("#stage");
@@ -40,8 +40,8 @@ const visualSystem = new VisualSystem(canvas);
 
 const TITLE_HIGHLIGHTS = {
   "relevo-generacional": {
-    es: [{ text: "RELEVO GENERACIONAL", tone: "gold" }],
-    pt: [{ text: "RELEVO GERACIONAL", tone: "gold" }],
+    es: [{ text: "RELEVO GENERACIONAL", tone: "cyan" }],
+    pt: [{ text: "RELEVO GERACIONAL", tone: "cyan" }],
   },
   "universidad-mundo": {
     es: [{ text: "La Universidad decidió encontrarse con el mundo.", tone: "cyan" }],
@@ -68,18 +68,18 @@ const TITLE_HIGHLIGHTS = {
   "nuevas-rutas": {
     es: [
       { text: "experiencia", tone: "cyan" },
-      { text: "camino", tone: "gold" },
+      { text: "camino", tone: "magenta" },
       { text: "nuevas rutas", tone: "red" },
     ],
     pt: [
       { text: "experiência", tone: "cyan" },
-      { text: "caminho", tone: "gold" },
+      { text: "caminho", tone: "magenta" },
       { text: "novas rotas", tone: "red" },
     ],
   },
   "vision-generaciones": {
-    es: [{ text: "Dos generaciones", tone: "gold" }],
-    pt: [{ text: "Duas gerações", tone: "gold" }],
+    es: [{ text: "Dos generaciones", tone: "cyan" }],
+    pt: [{ text: "Duas gerações", tone: "cyan" }],
   },
   "trabajan-juntas": {
     es: [

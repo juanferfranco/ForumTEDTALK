@@ -192,11 +192,6 @@ h1 {
   --highlight-glow: rgba(233, 109, 170, 0.34);
 }
 
-.title-highlight--gold {
-  --highlight-color: #d6a94f;
-  --highlight-glow: rgba(214, 169, 79, 0.34);
-}
-
 .copy-layer.is-long h1 {
   max-width: 16.8ch;
   font-size: clamp(36px, 5.2vw, 92px);
