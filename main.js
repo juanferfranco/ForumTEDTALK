@@ -1,6 +1,6 @@
-import { CONFIG } from "./config.js?v=grammar-9";
-import { languageLabels, moments } from "./moments.js?v=grammar-9";
-import { VisualSystem } from "./visualSystem.js?v=grammar-9";
+import { CONFIG } from "./config.js?v=grammar-18";
+import { languageLabels, moments } from "./moments.js?v=grammar-18";
+import { VisualSystem } from "./visualSystem.js?v=grammar-18";
 
 const canvas = document.querySelector("#visual-canvas");
 const stage = document.querySelector("#stage");
@@ -9,6 +9,8 @@ const kickerEl = document.querySelector("#moment-kicker");
 const subtitleEl = document.querySelector("#moment-subtitle");
 const numberEl = document.querySelector("#moment-number");
 const totalEl = document.querySelector("#moment-total");
+const mobileNumberEl = document.querySelector("#mobile-moment-number");
+const mobileTotalEl = document.querySelector("#mobile-moment-total");
 const copyLayer = document.querySelector(".copy-layer");
 const helpPanel = document.querySelector("#help-panel");
 const operatorUi = document.querySelector("#operator-ui");
@@ -34,6 +36,75 @@ let activeLanguage = localStorage.getItem("forum-language") || CONFIG.defaultLan
 let transitionTimer = 0;
 
 const visualSystem = new VisualSystem(canvas);
+
+const TITLE_HIGHLIGHTS = {
+  "relevo-generacional": {
+    es: [{ text: "RELEVO GENERACIONAL", tone: "gold" }],
+    pt: [{ text: "RELEVO GERACIONAL", tone: "gold" }],
+  },
+  "universidad-mundo": {
+    es: [{ text: "La Universidad decidió encontrarse con el mundo.", tone: "cyan" }],
+    pt: [{ text: "A Universidade decidiu se encontrar com o mundo.", tone: "cyan" }],
+  },
+  impacto: {
+    es: [{ text: "El impacto sí.", tone: "red" }],
+    pt: [{ text: "O impacto, sim.", tone: "red" }],
+  },
+  comunidad: {
+    es: [
+      { text: "comunidad", tone: "cyan" },
+      { text: "transformación", tone: "magenta" },
+    ],
+    pt: [
+      { text: "comunidade", tone: "cyan" },
+      { text: "transformação", tone: "magenta" },
+    ],
+  },
+  confianza: {
+    es: [{ text: "confianza", tone: "magenta" }],
+    pt: [{ text: "confiança", tone: "magenta" }],
+  },
+  "nuevas-rutas": {
+    es: [
+      { text: "experiencia", tone: "cyan" },
+      { text: "camino", tone: "gold" },
+      { text: "nuevas rutas", tone: "red" },
+    ],
+    pt: [
+      { text: "experiência", tone: "cyan" },
+      { text: "caminho", tone: "gold" },
+      { text: "novas rotas", tone: "red" },
+    ],
+  },
+  "vision-generaciones": {
+    es: [{ text: "Dos generaciones", tone: "gold" }],
+    pt: [{ text: "Duas gerações", tone: "gold" }],
+  },
+  "trabajan-juntas": {
+    es: [
+      { text: "crecimiento", tone: "cyan" },
+      { text: "trabajan juntas", tone: "magenta" },
+    ],
+    pt: [
+      { text: "crescimento", tone: "cyan" },
+      { text: "trabalham juntas", tone: "magenta" },
+    ],
+  },
+  "presente-joven": {
+    es: [{ text: "presente", tone: "red" }],
+    pt: [{ text: "presente", tone: "red" }],
+  },
+  "futuro-construido": {
+    es: [
+      { text: "futuro", tone: "cyan" },
+      { text: "Se construye", tone: "red" },
+    ],
+    pt: [
+      { text: "futuro", tone: "cyan" },
+      { text: "constrói", tone: "red" },
+    ],
+  },
+};
 
 function pad(value) {
   return String(value).padStart(2, "0");
@@ -98,6 +169,65 @@ function copyFor(moment) {
   return moment.copy?.[activeLanguage] || moment.copy?.[CONFIG.defaultLanguage] || moment.copy?.es || moment;
 }
 
+function highlightsFor(moment) {
+  return TITLE_HIGHLIGHTS[moment.id]?.[activeLanguage] || TITLE_HIGHLIGHTS[moment.id]?.[CONFIG.defaultLanguage] || [];
+}
+
+function appendHighlightedText(parent, text, highlights) {
+  if (!highlights.length) {
+    parent.append(document.createTextNode(text));
+    return;
+  }
+
+  const normalizedText = text.toLocaleLowerCase(activeLanguage);
+  const ordered = [...highlights].sort((a, b) => b.text.length - a.text.length);
+  let cursor = 0;
+
+  while (cursor < text.length) {
+    let next = null;
+    for (const highlight of ordered) {
+      const index = normalizedText.indexOf(highlight.text.toLocaleLowerCase(activeLanguage), cursor);
+      if (index === -1) continue;
+      if (!next || index < next.index || (index === next.index && highlight.text.length > next.text.length)) {
+        next = { ...highlight, index };
+      }
+    }
+
+    if (!next) {
+      parent.append(document.createTextNode(text.slice(cursor)));
+      break;
+    }
+
+    if (next.index > cursor) {
+      parent.append(document.createTextNode(text.slice(cursor, next.index)));
+    }
+
+    const span = document.createElement("span");
+    span.className = `title-highlight title-highlight--${next.tone}`;
+    span.textContent = text.slice(next.index, next.index + next.text.length);
+    parent.append(span);
+    cursor = next.index + next.text.length;
+  }
+}
+
+function renderTitle(moment, copy) {
+  titleEl.replaceChildren();
+  const parent =
+    moment.state === "qr"
+      ? Object.assign(document.createElement("a"), {
+          href: CONFIG.qr.socialUrl,
+          target: "_blank",
+          rel: "noopener noreferrer",
+        })
+      : titleEl;
+
+  appendHighlightedText(parent, copy.title, highlightsFor(moment));
+
+  if (moment.state === "qr") {
+    titleEl.append(parent);
+  }
+}
+
 function updateLanguageUi() {
   document.documentElement.lang = activeLanguage;
   for (const button of languageButtons) {
@@ -151,21 +281,12 @@ function setMoment(index) {
   copyLayer.classList.add("is-changing");
   transitionTimer = window.setTimeout(() => {
     kickerEl.textContent = copy.kicker || CONFIG.brandLine;
-    titleEl.replaceChildren();
-    if (moment.state === "qr") {
-      const socialLink = document.createElement("a");
-      socialLink.href = CONFIG.qr.socialUrl;
-      socialLink.target = "_blank";
-      socialLink.rel = "noopener noreferrer";
-      socialLink.textContent = copy.title;
-      titleEl.append(socialLink);
-    } else {
-      titleEl.textContent = copy.title;
-    }
+    renderTitle(moment, copy);
     subtitleEl.textContent = copy.subtitle || "";
     copyLayer.classList.toggle("is-long", copy.title.length > 74);
     copyLayer.classList.toggle("is-very-long", copy.title.length > 104);
     numberEl.textContent = pad(activeIndex + 1);
+    mobileNumberEl.textContent = pad(activeIndex + 1);
     copyLayer.classList.remove("is-changing");
   }, 180);
   setAsset(moment);
@@ -258,6 +379,7 @@ stage.addEventListener("touchend", (event) => {
 });
 
 totalEl.textContent = String(moments.length);
+mobileTotalEl.textContent = String(moments.length);
 qrMemoryLink.href = CONFIG.qr.memoryUrl;
 qrSocialLink.href = CONFIG.qr.socialUrl;
 makeQrPattern(qrMemory, CONFIG.qr.memoryUrl, CONFIG.qr.memoryImage);

@@ -56,7 +56,7 @@ export const moments = [
       spiral: 0.14,
       network: 0.02,
       architecture: 0.2,
-      archive: 0.32,
+      archive: 0,
       stability: 0.78,
     },
   },

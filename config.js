@@ -11,8 +11,32 @@ export const CONFIG = {
     byMoment: {
       "auditorio-grados": {
         type: "image",
-        src: "./assets/ceremonia-grados-placeholder.png",
-        alt: "Ceremonia de grados en un auditorio universitario",
+        src: "./assets/slide-02-grados.webp",
+        alt: "Ceremonia de grados en Forum UPB",
+        placement: "background",
+      },
+      "academia-industria-ciudad": {
+        type: "image",
+        src: "./assets/slide-04-actores.webp",
+        alt: "Panel con publico en Forum UPB",
+        placement: "background",
+      },
+      impacto: {
+        type: "image",
+        src: "./assets/slide-05-impacto.webp",
+        alt: "Evento con actores institucionales y empresariales reunidos",
+        placement: "background",
+      },
+      "nuevas-rutas": {
+        type: "image",
+        src: "./assets/slide-08-rutas.webp",
+        alt: "Mesas de trabajo y conversaciones en comunidad",
+        placement: "background",
+      },
+      "futuro-construido": {
+        type: "image",
+        src: "./assets/slide-12-futuro.webp",
+        alt: "Auditorio Forum UPB preparado para un evento",
         placement: "background",
       },
     },
